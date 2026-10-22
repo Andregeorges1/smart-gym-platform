@@ -1,108 +1,1992 @@
-import React, { useEffect, useState } from 'react';
-import { Avatar, Badge, Bars, Button, DownloadDoc, EmptyState, Field, Icon, IconButton, Modal, Notice, Ring, Toggle } from './components.jsx';
-import { availablePlaces, bookSession, cancelBooking, facilities, finishWorkout, meals, money, placeOrder, redeemReward, refundOrder, TODAY, uid, workouts } from './domain.js';
+import React, { useEffect, useState } from "react";
+import {
+  Avatar,
+  Badge,
+  Bars,
+  Button,
+  DownloadDoc,
+  EmptyState,
+  Field,
+  Icon,
+  IconButton,
+  Modal,
+  Notice,
+  Ring,
+  Toggle,
+} from "./components.jsx";
+import {
+  availablePlaces,
+  bookSession,
+  cancelBooking,
+  facilities,
+  finishWorkout,
+  meals,
+  money,
+  placeOrder,
+  redeemReward,
+  refundOrder,
+  TODAY,
+  uid,
+  workouts,
+} from "./domain.js";
 
 function WorkoutFlow({ workout, s, update, notify, close }) {
-  const [started,setStarted]=useState(false), [step,setStep]=useState(0), [paused,setPaused]=useState(false), [seconds,setSeconds]=useState(0), [finished,setFinished]=useState(false);
-  useEffect(()=>{if(!started||paused||finished)return;const timer=setInterval(()=>setSeconds(t=>t+1),1000);return()=>clearInterval(timer)},[started,paused,finished]);
-  const exercise=workout.exercises[step];
-  if(finished)return <div className="success-screen"><span className="success-art"><Icon name="success" size={52}/></span><span className="eyebrow">A LITTLE STRONGER THAN BEFORE</span><h2>You showed up.<br />That’s a good feeling.</h2><p>{workout.name} is now in your training history.</p><div className="success-stats"><span><strong>{workout.exercises.length}</strong>exercises explored</span><span><strong>{s.ledger.some(e=>e.id===`workout-${TODAY}`)?'Recorded':'Complete'}</strong>workout logged</span></div><Notice>This is an abbreviated guided demo. Workout points are capped at 20 per demo day.</Notice><Button className="full" onClick={close}>Keep the good feeling<Icon name="arrow" size={17}/></Button></div>;
-  return <><div className="workout-dialog-banner sage"><span className="square-icon"><Icon name="dumbbell" size={30}/></span><h2>{workout.name}</h2><p>{workout.duration} min · {workout.level} · {workout.category}</p></div>{!started?<><p className="muted">A clear plan, equipment from your branch, and room to go at your own pace.</p>{workout.exercises.map((e,i)=><div className="list-row" key={i}><span className="step-number">{i+1}</span><span className="grow"><strong>{e.name}</strong><small>{e.sets} sets × {e.reps} {e.name.includes('cooldown')||e.name.includes('warm-up')?'minutes':'reps'}</small></span><Icon name="right" size={16}/></div>)}<Notice>Guided demonstration: explore each exercise and mark it complete. Use a comfortable load and ask your trainer for help with form.</Notice><Button className="full" onClick={()=>setStarted(true)} icon="play">Start guided session</Button></>:<><div className="spread space-top"><Badge color="sage">EXERCISE {step+1} OF {workout.exercises.length}</Badge><span className="session-timer">{String(Math.floor(seconds/60)).padStart(2,'0')}:{String(seconds%60).padStart(2,'0')}</span></div><div className="active-exercise"><span className="exercise-symbol"><Icon name={exercise.equipment==='treadmill'?'activity':'dumbbell'} size={64}/></span><h2>{exercise.name}</h2><span className="exercise-reps">{exercise.sets}<small>sets</small><span>×</span>{exercise.reps}<small>reps / min</small></span><p>{exercise.cue||s.equipment.find(e=>e.id===exercise.equipment)?.instructions}</p><Badge color="sage"><Icon name="pin" size={13}/>{s.equipment.find(e=>e.id===exercise.equipment)?.zone||'Open floor'}</Badge></div><div className="progress-track"><span style={{width:`${(step+1)/workout.exercises.length*100}%`}}/></div><div className="modal-actions"><Button variant="secondary" icon={paused?'play':'pause'} onClick={()=>setPaused(!paused)}>{paused?'Resume':'Pause'}</Button><Button disabled={paused} onClick={()=>{if(step<workout.exercises.length-1)setStep(step+1);else{update(st=>finishWorkout(st,workout));setFinished(true);notify('Workout saved. Your activity and rewards are up to date.')}}}>{step<workout.exercises.length-1?'Complete & next':'Finish session'}<Icon name="check" size={17}/></Button></div></>}</>;
+  const [started, setStarted] = useState(false),
+    [step, setStep] = useState(0),
+    [paused, setPaused] = useState(false),
+    [seconds, setSeconds] = useState(0),
+    [finished, setFinished] = useState(false);
+  useEffect(() => {
+    if (!started || paused || finished) return;
+    const timer = setInterval(() => setSeconds((t) => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, [started, paused, finished]);
+  const exercise = workout.exercises[step];
+  if (finished)
+    return (
+      <div className="success-screen">
+        <span className="success-art">
+          <Icon name="success" size={52} />
+        </span>
+        <span className="eyebrow">A LITTLE STRONGER THAN BEFORE</span>
+        <h2>
+          You showed up.
+          <br />
+          That’s a good feeling.
+        </h2>
+        <p>{workout.name} is now in your training history.</p>
+        <div className="success-stats">
+          <span>
+            <strong>{workout.exercises.length}</strong>exercises explored
+          </span>
+          <span>
+            <strong>
+              {s.ledger.some((e) => e.id === `workout-${TODAY}`)
+                ? "Recorded"
+                : "Complete"}
+            </strong>
+            workout logged
+          </span>
+        </div>
+        <Notice>
+          This is an abbreviated guided demo. Workout points are capped at 20
+          per demo day.
+        </Notice>
+        <Button className="full" onClick={close}>
+          Keep the good feeling
+          <Icon name="arrow" size={17} />
+        </Button>
+      </div>
+    );
+  return (
+    <>
+      <div className="workout-dialog-banner sage">
+        <span className="square-icon">
+          <Icon name="dumbbell" size={30} />
+        </span>
+        <h2>{workout.name}</h2>
+        <p>
+          {workout.duration} min · {workout.level} · {workout.category}
+        </p>
+      </div>
+      {!started ? (
+        <>
+          <p className="muted">
+            A clear plan, equipment from your branch, and room to go at your own
+            pace.
+          </p>
+          {workout.exercises.map((e, i) => (
+            <div className="list-row" key={i}>
+              <span className="step-number">{i + 1}</span>
+              <span className="grow">
+                <strong>{e.name}</strong>
+                <small>
+                  {e.sets} sets × {e.reps}{" "}
+                  {e.name.includes("cooldown") || e.name.includes("warm-up")
+                    ? "minutes"
+                    : "reps"}
+                </small>
+              </span>
+              <Icon name="right" size={16} />
+            </div>
+          ))}
+          <Notice>
+            Guided demonstration: explore each exercise and mark it complete.
+            Use a comfortable load and ask your trainer for help with form.
+          </Notice>
+          <Button className="full" onClick={() => setStarted(true)} icon="play">
+            Start guided session
+          </Button>
+        </>
+      ) : (
+        <>
+          <div className="spread space-top">
+            <Badge color="sage">
+              EXERCISE {step + 1} OF {workout.exercises.length}
+            </Badge>
+            <span className="session-timer">
+              {String(Math.floor(seconds / 60)).padStart(2, "0")}:
+              {String(seconds % 60).padStart(2, "0")}
+            </span>
+          </div>
+          <div className="active-exercise">
+            <span className="exercise-symbol">
+              <Icon
+                name={
+                  exercise.equipment === "treadmill" ? "activity" : "dumbbell"
+                }
+                size={64}
+              />
+            </span>
+            <h2>{exercise.name}</h2>
+            <span className="exercise-reps">
+              {exercise.sets}
+              <small>sets</small>
+              <span>×</span>
+              {exercise.reps}
+              <small>reps / min</small>
+            </span>
+            <p>
+              {exercise.cue ||
+                s.equipment.find((e) => e.id === exercise.equipment)
+                  ?.instructions}
+            </p>
+            <Badge color="sage">
+              <Icon name="pin" size={13} />
+              {s.equipment.find((e) => e.id === exercise.equipment)?.zone ||
+                "Open floor"}
+            </Badge>
+          </div>
+          <div className="progress-track">
+            <span
+              style={{
+                width: `${((step + 1) / workout.exercises.length) * 100}%`,
+              }}
+            />
+          </div>
+          <div className="modal-actions">
+            <Button
+              variant="secondary"
+              icon={paused ? "play" : "pause"}
+              onClick={() => setPaused(!paused)}
+            >
+              {paused ? "Resume" : "Pause"}
+            </Button>
+            <Button
+              disabled={paused}
+              onClick={() => {
+                if (step < workout.exercises.length - 1) setStep(step + 1);
+                else {
+                  update((st) => finishWorkout(st, workout));
+                  setFinished(true);
+                  notify(
+                    "Workout saved. Your activity and rewards are up to date.",
+                  );
+                }
+              }}
+            >
+              {step < workout.exercises.length - 1
+                ? "Complete & next"
+                : "Finish session"}
+              <Icon name="check" size={17} />
+            </Button>
+          </div>
+        </>
+      )}
+    </>
+  );
 }
 
 function Chat({ s, update, data, role }) {
-  const [text,setText]=useState('');
-  const from=role==='trainer'?'trainer':'member';
-  const messages=s.messages.filter(m=>m.channel===data.channel);
-  const send=(value,sender)=>update(st=>({...st,messages:[...st.messages,{id:uid(),channel:data.channel,from:sender,text:value.trim(),time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}]}));
-  return <><div className="chat-person"><Avatar initials={data.channel==='trainer'?'OA':data.name.split(' ').map(w=>w[0]).join('')}/><span><strong>{data.name}</strong><small>{data.channel==='trainer'?'Your coaching conversation':'Your workout connection'}</small></span><Badge color="sage">Demo chat</Badge></div><div className="chat-thread" aria-live="polite">{messages.length?messages.map(m=><div className={`chat-bubble ${m.from===from?'mine':''}`} key={m.id}><small>{m.from===from?'You':m.from==='trainer'?s.assignedTrainer:m.from==='member'?s.memberName:data.name}</small><p>{m.text}</p><time>{m.time}</time></div>):<p className="muted">Say hello. A good routine can start with a conversation.</p>}</div><form className="chat-composer" onSubmit={e=>{e.preventDefault();if(text.trim()){send(text,from);setText('')}}}><input aria-label="Message" placeholder="A little encouragement…" value={text} maxLength={1000} onChange={e=>setText(e.target.value)}/><button className="btn primary" type="submit" disabled={!text.trim()} aria-label="Send message"><Icon name="send" size={18}/></button></form>{data.channel!=='trainer'&&<Button className="space-top" variant="ghost" onClick={()=>send('Sounds good! Let’s meet near the free weights before the session.','partner')}>Simulate partner reply</Button>}<p className="muted small">Messages stay in this browser. {data.channel==='trainer'?'Switch between member and trainer roles to reply.':'No message is sent to a real person.'}</p></>;
+  const [text, setText] = useState("");
+  const from = role === "trainer" ? "trainer" : "member";
+  const messages = s.messages.filter((m) => m.channel === data.channel);
+  const send = (value, sender) =>
+    update((st) => ({
+      ...st,
+      messages: [
+        ...st.messages,
+        {
+          id: uid(),
+          channel: data.channel,
+          from: sender,
+          text: value.trim(),
+          time: new Date().toLocaleTimeString("en-GB", {
+            timeZone: "Africa/Cairo",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ],
+    }));
+  return (
+    <>
+      <div className="chat-person">
+        <Avatar
+          initials={
+            data.channel === "trainer"
+              ? "OA"
+              : data.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")
+          }
+        />
+        <span>
+          <strong>{data.name}</strong>
+          <small>
+            {data.channel === "trainer"
+              ? "Your coaching conversation"
+              : "Your workout connection"}
+          </small>
+        </span>
+        <Badge color="sage">Demo chat</Badge>
+      </div>
+      <div className="chat-thread" aria-live="polite">
+        {messages.length ? (
+          messages.map((m) => (
+            <div
+              className={`chat-bubble ${m.from === from ? "mine" : ""}`}
+              key={m.id}
+            >
+              <small>
+                {m.from === from
+                  ? "You"
+                  : m.from === "trainer"
+                    ? s.assignedTrainer
+                    : m.from === "member"
+                      ? s.memberName
+                      : data.name}
+              </small>
+              <p>{m.text}</p>
+              <time>{m.time}</time>
+            </div>
+          ))
+        ) : (
+          <p className="muted">
+            Say hello. A good routine can start with a conversation.
+          </p>
+        )}
+      </div>
+      <form
+        className="chat-composer"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (text.trim()) {
+            send(text, from);
+            setText("");
+          }
+        }}
+      >
+        <input
+          aria-label="Message"
+          placeholder="A little encouragement…"
+          value={text}
+          maxLength={1000}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button
+          className="btn primary"
+          type="submit"
+          disabled={!text.trim()}
+          aria-label="Send message"
+        >
+          <Icon name="send" size={18} />
+        </button>
+      </form>
+      {data.channel !== "trainer" && (
+        <Button
+          className="space-top"
+          variant="ghost"
+          onClick={() =>
+            send(
+              "Sounds good! Let’s meet near the free weights before the session.",
+              "partner",
+            )
+          }
+        >
+          Simulate partner reply
+        </Button>
+      )}
+      <p className="muted small">
+        Messages stay in this browser.{" "}
+        {data.channel === "trainer"
+          ? "Switch between member and trainer roles to reply."
+          : "No message is sent to a real person."}
+      </p>
+    </>
+  );
 }
 
 function EquipmentEditor({ data, s, update, close, notify }) {
-  const [form,setForm]=useState(data||{name:'',zone:'Strength',muscle:'Full body',x:60,y:45,status:'Active',instructions:'',icon:'dumbbell'});
-  const set=(key,value)=>setForm(v=>({...v,[key]:value}));
-  return <form onSubmit={e=>{e.preventDefault();const item={...form,name:form.name.trim(),instructions:form.instructions.trim(),id:form.id||`equipment-${uid()}`};if(!item.name||!item.instructions)return;update(st=>({...st,equipment:data?st.equipment.map(eq=>eq.id===data.id?item:eq):[...st.equipment,item]}));notify('Equipment saved. Your member map is up to date.');close()}}><Field label="Equipment name"><input required maxLength={45} value={form.name} onChange={e=>set('name',e.target.value)}/></Field><div className="two-col"><Field label="Zone"><select value={form.zone} onChange={e=>set('zone',e.target.value)}>{['Strength','Cardio','Free weights'].map(z=><option key={z}>{z}</option>)}</select></Field><Field label="Target muscle group"><select value={form.muscle} onChange={e=>set('muscle',e.target.value)}>{['Full body','Legs','Chest','Back'].map(z=><option key={z}>{z}</option>)}</select></Field></div><Field label="Status"><select value={form.status} onChange={e=>set('status',e.target.value)}><option>Active</option><option>Maintenance</option></select></Field><Field label="Instructions"><textarea required rows={3} maxLength={500} value={form.instructions} onChange={e=>set('instructions',e.target.value)} placeholder="How to use this equipment safely"/></Field><div className="two-col"><Field label={`Horizontal position · ${form.x}%`}><input type="range" min="10" max="90" value={form.x} onChange={e=>set('x',Number(e.target.value))}/></Field><Field label={`Vertical position · ${form.y}%`}><input type="range" min="15" max="78" value={form.y} onChange={e=>set('y',Number(e.target.value))}/></Field></div><Notice>Locations are manually placed on the sample floor plan. No machine scanning or occupied/free detection.</Notice><button type="submit" className="btn primary full">Save equipment<Icon name="check" size={17}/></button></form>;
+  const [form, setForm] = useState(
+    data || {
+      name: "",
+      zone: "Strength",
+      muscle: "Full body",
+      x: 60,
+      y: 45,
+      status: "Active",
+      instructions: "",
+      icon: "dumbbell",
+    },
+  );
+  const set = (key, value) => setForm((v) => ({ ...v, [key]: value }));
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const item = {
+          ...form,
+          name: form.name.trim(),
+          instructions: form.instructions.trim(),
+          id: form.id || `equipment-${uid()}`,
+        };
+        if (!item.name || !item.instructions) return;
+        update((st) => ({
+          ...st,
+          equipment: data
+            ? st.equipment.map((eq) => (eq.id === data.id ? item : eq))
+            : [...st.equipment, item],
+        }));
+        notify("Equipment saved. Your member map is up to date.");
+        close();
+      }}
+    >
+      <Field label="Equipment name">
+        <input
+          required
+          maxLength={45}
+          value={form.name}
+          onChange={(e) => set("name", e.target.value)}
+        />
+      </Field>
+      <div className="two-col">
+        <Field label="Zone">
+          <select
+            value={form.zone}
+            onChange={(e) => set("zone", e.target.value)}
+          >
+            {["Strength", "Cardio", "Free weights"].map((z) => (
+              <option key={z}>{z}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Target muscle group">
+          <select
+            value={form.muscle}
+            onChange={(e) => set("muscle", e.target.value)}
+          >
+            {["Full body", "Legs", "Chest", "Back"].map((z) => (
+              <option key={z}>{z}</option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <Field label="Status">
+        <select
+          value={form.status}
+          onChange={(e) => set("status", e.target.value)}
+        >
+          <option>Active</option>
+          <option>Maintenance</option>
+        </select>
+      </Field>
+      <Field label="Instructions">
+        <textarea
+          required
+          rows={3}
+          maxLength={500}
+          value={form.instructions}
+          onChange={(e) => set("instructions", e.target.value)}
+          placeholder="How to use this equipment safely"
+        />
+      </Field>
+      <div className="two-col">
+        <Field label={`Horizontal position · ${form.x}%`}>
+          <input
+            type="range"
+            min="10"
+            max="90"
+            value={form.x}
+            onChange={(e) => set("x", Number(e.target.value))}
+          />
+        </Field>
+        <Field label={`Vertical position · ${form.y}%`}>
+          <input
+            type="range"
+            min="15"
+            max="78"
+            value={form.y}
+            onChange={(e) => set("y", Number(e.target.value))}
+          />
+        </Field>
+      </div>
+      <Notice>
+        Locations are manually placed on the sample floor plan. No machine
+        scanning or occupied/free detection.
+      </Notice>
+      <button type="submit" className="btn primary full">
+        Save equipment
+        <Icon name="check" size={17} />
+      </button>
+    </form>
+  );
 }
 
 function Checkout({ data, s, update, close, notify }) {
-  const [cart,setCart]=useState({...data.cart}),[points,setPoints]=useState(false),[fulfillment,setFulfillment]=useState('Pickup'),[address,setAddress]=useState('');
-  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,qty])=>({...meals.find(m=>m.id===id),qty}));
-  const subtotal=items.reduce((a,m)=>a+m.price*m.qty,0),discount=points&&s.points>=250?25:0,delivery=fulfillment==='Delivery'?25:0;
-  if(!items.length)return <EmptyState icon="salad" title="Your bag has room for something good" description="Explore a fresh bowl or a protein smoothie from your local partners." action="Explore the menu" onAction={close}/>;
-  return <form onSubmit={e=>{e.preventDefault();update(st=>placeOrder(st,cart,points,fulfillment));data.setCart({});notify('Demo order confirmed. Find it in your recent orders.');close()}}>{items.map(m=><div className="cart-item" key={m.id}><span className={`cart-emoji ${m.color}`}>{m.emoji}</span><span className="grow"><strong>{m.name}</strong><small>{m.restaurant} · {money(m.price)}</small></span><div className="quantity"><IconButton icon="minus" label={`Remove one ${m.name}`} onClick={()=>{setCart(c=>({...c,[m.id]:Math.max(0,c[m.id]-1)}));data.setCart(c=>({...c,[m.id]:Math.max(0,c[m.id]-1)}))}}/><span>{m.qty}</span><IconButton icon="plus" label={`Add one ${m.name}`} onClick={()=>{setCart(c=>({...c,[m.id]:c[m.id]+1}));data.setCart(c=>({...c,[m.id]:(c[m.id]||0)+1}))}}/></div></div>)}<Field label="How would you like your order?"><select value={fulfillment} onChange={e=>setFulfillment(e.target.value)}><option>Pickup</option><option>Delivery</option></select></Field>{fulfillment==='Delivery'?<Field label="Demo delivery address" hint="Use a fictional address. It remains in this dialog and is not stored or sent."><input required maxLength={150} value={address} onChange={e=>setAddress(e.target.value)} placeholder="e.g. Demo building, near the club"/></Field>:<Notice icon="pin">Pick up each item at its listed partner. This is a demo order; restaurants will not receive it.</Notice>}<Toggle checked={points} onChange={setPoints} label="Use 250 points for EGP 25 off" description={s.points>=250?`${s.points.toLocaleString()} points available`:'Not enough points. You need 250 points.'}/><div className="order-totals"><span>Subtotal<strong>{money(subtotal)}</strong></span><span>Reward discount<strong>−{money(discount)}</strong></span>{delivery>0&&<span>Demo delivery fee<strong>{money(delivery)}</strong></span>}<span className="total">Total<strong>{money(subtotal-discount+delivery)}</strong></span></div><button className="btn primary full" type="submit">Confirm demo order · {money(subtotal-discount+delivery)}<Icon name="arrow" size={17}/></button><p className="muted small">Simulated checkout. No payment details or real charges. Sample prices include any demo taxes.</p></form>;
+  const [cart, setCart] = useState({ ...data.cart }),
+    [points, setPoints] = useState(false),
+    [fulfillment, setFulfillment] = useState("Pickup"),
+    [address, setAddress] = useState("");
+  const items = Object.entries(cart)
+    .filter(([, q]) => q > 0)
+    .map(([id, qty]) => ({ ...meals.find((m) => m.id === id), qty }));
+  const subtotal = items.reduce((a, m) => a + m.price * m.qty, 0),
+    discount = points && s.points >= 250 ? 25 : 0,
+    delivery = fulfillment === "Delivery" ? 25 : 0;
+  if (!items.length)
+    return (
+      <EmptyState
+        icon="salad"
+        title="Your bag has room for something good"
+        description="Explore a fresh bowl or a protein smoothie from your local partners."
+        action="Explore the menu"
+        onAction={close}
+      />
+    );
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        update((st) => placeOrder(st, cart, points, fulfillment));
+        data.setCart({});
+        notify("Demo order confirmed. Find it in your recent orders.");
+        close();
+      }}
+    >
+      {items.map((m) => (
+        <div className="cart-item" key={m.id}>
+          <span className={`cart-emoji ${m.color}`}>{m.emoji}</span>
+          <span className="grow">
+            <strong>{m.name}</strong>
+            <small>
+              {m.restaurant} · {money(m.price)}
+            </small>
+          </span>
+          <div className="quantity">
+            <IconButton
+              icon="minus"
+              label={`Remove one ${m.name}`}
+              onClick={() => {
+                setCart((c) => ({ ...c, [m.id]: Math.max(0, c[m.id] - 1) }));
+                data.setCart((c) => ({
+                  ...c,
+                  [m.id]: Math.max(0, c[m.id] - 1),
+                }));
+              }}
+            />
+            <span>{m.qty}</span>
+            <IconButton
+              icon="plus"
+              label={`Add one ${m.name}`}
+              onClick={() => {
+                setCart((c) => ({ ...c, [m.id]: c[m.id] + 1 }));
+                data.setCart((c) => ({ ...c, [m.id]: (c[m.id] || 0) + 1 }));
+              }}
+            />
+          </div>
+        </div>
+      ))}
+      <Field label="How would you like your order?">
+        <select
+          value={fulfillment}
+          onChange={(e) => setFulfillment(e.target.value)}
+        >
+          <option>Pickup</option>
+          <option>Delivery</option>
+        </select>
+      </Field>
+      {fulfillment === "Delivery" ? (
+        <Field
+          label="Demo delivery address"
+          hint="Use a fictional address. It remains in this dialog and is not stored or sent."
+        >
+          <input
+            required
+            maxLength={150}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="e.g. Demo building, near the club"
+          />
+        </Field>
+      ) : (
+        <Notice icon="pin">
+          Pick up each item at its listed partner. This is a demo order;
+          restaurants will not receive it.
+        </Notice>
+      )}
+      <Toggle
+        checked={points}
+        onChange={setPoints}
+        label="Use 250 points for EGP 25 off"
+        description={
+          s.points >= 250
+            ? `${s.points.toLocaleString()} points available`
+            : "Not enough points. You need 250 points."
+        }
+      />
+      <div className="order-totals">
+        <span>
+          Subtotal<strong>{money(subtotal)}</strong>
+        </span>
+        <span>
+          Reward discount<strong>−{money(discount)}</strong>
+        </span>
+        {delivery > 0 && (
+          <span>
+            Demo delivery fee<strong>{money(delivery)}</strong>
+          </span>
+        )}
+        <span className="total">
+          Total<strong>{money(subtotal - discount + delivery)}</strong>
+        </span>
+      </div>
+      <button className="btn primary full" type="submit">
+        Confirm demo order · {money(subtotal - discount + delivery)}
+        <Icon name="arrow" size={17} />
+      </button>
+      <p className="muted small">
+        Simulated checkout. No payment details or real charges. Sample prices
+        include any demo taxes.
+      </p>
+    </form>
+  );
 }
 
 function ProgramBuilder({ s, update, close, notify }) {
-  const active=s.equipment.filter(e=>e.status==='Active');
-  const [name,setName]=useState(s.customProgram?.name||'Your next strength chapter'),[duration,setDuration]=useState(s.customProgram?.duration||35),[selected,setSelected]=useState(s.customProgram?.exercises.map(e=>e.equipment)||['legpress','dumbbells','extension']),[sets,setSets]=useState(3),[reps,setReps]=useState(12);
-  return <form onSubmit={e=>{e.preventDefault();const chosen=active.filter(e=>selected.includes(e.id));if(!chosen.length)return;const program={id:s.customProgram?.id||`custom-${uid()}`,name:name.trim(),duration:Number(duration),category:'Strength',level:'Personalized',color:'green',exercises:chosen.map(eq=>({name:eq.name,equipment:eq.id,sets:Number(sets),reps:Number(reps),cue:eq.instructions}))};update(st=>({...st,customProgram:program,program:program.name}));notify('Program assigned. The member can start it from their training page.');close()}}><Field label="Program name"><input required maxLength={55} value={name} onChange={e=>setName(e.target.value)}/></Field><div className="three-col"><Field label="Duration (min)"><input type="number" min="5" max="120" required value={duration} onChange={e=>setDuration(e.target.value)}/></Field><Field label="Sets per exercise"><input type="number" min="1" max="6" required value={sets} onChange={e=>setSets(e.target.value)}/></Field><Field label="Repetitions"><input type="number" min="1" max="30" required value={reps} onChange={e=>setReps(e.target.value)}/></Field></div><p className="field-label">Choose branch equipment</p><div className="equipment-checklist">{active.map(eq=><label key={eq.id}><input type="checkbox" checked={selected.includes(eq.id)} onChange={e=>setSelected(ids=>e.target.checked?[...ids,eq.id]:ids.filter(id=>id!==eq.id))}/><span><strong>{eq.name}</strong><small>{eq.muscle} · {eq.zone}</small></span></label>)}</div><Notice>Only equipment currently in service at {s.branch} is available. Programs are assigned to {s.memberName}.</Notice><button type="submit" className="btn primary full" disabled={!active.some(e=>selected.includes(e.id))}>Assign program<Icon name="check" size={17}/></button></form>;
+  const active = s.equipment.filter((e) => e.status === "Active");
+  const [name, setName] = useState(
+      s.customProgram?.name || "Your next strength chapter",
+    ),
+    [duration, setDuration] = useState(s.customProgram?.duration || 35),
+    [selected, setSelected] = useState(
+      s.customProgram?.exercises.map((e) => e.equipment) || [
+        "legpress",
+        "dumbbells",
+        "extension",
+      ],
+    ),
+    [sets, setSets] = useState(3),
+    [reps, setReps] = useState(12);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const chosen = active.filter((e) => selected.includes(e.id));
+        if (!chosen.length) return;
+        const program = {
+          id: s.customProgram?.id || `custom-${uid()}`,
+          name: name.trim(),
+          duration: Number(duration),
+          category: "Strength",
+          level: "Personalized",
+          color: "green",
+          exercises: chosen.map((eq) => ({
+            name: eq.name,
+            equipment: eq.id,
+            sets: Number(sets),
+            reps: Number(reps),
+            cue: eq.instructions,
+          })),
+        };
+        update((st) => ({
+          ...st,
+          customProgram: program,
+          program: program.name,
+        }));
+        notify(
+          "Program assigned. The member can start it from their training page.",
+        );
+        close();
+      }}
+    >
+      <Field label="Program name">
+        <input
+          required
+          maxLength={55}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </Field>
+      <div className="three-col">
+        <Field label="Duration (min)">
+          <input
+            type="number"
+            min="5"
+            max="120"
+            required
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          />
+        </Field>
+        <Field label="Sets per exercise">
+          <input
+            type="number"
+            min="1"
+            max="6"
+            required
+            value={sets}
+            onChange={(e) => setSets(e.target.value)}
+          />
+        </Field>
+        <Field label="Repetitions">
+          <input
+            type="number"
+            min="1"
+            max="30"
+            required
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+          />
+        </Field>
+      </div>
+      <p className="field-label">Choose branch equipment</p>
+      <div className="equipment-checklist">
+        {active.map((eq) => (
+          <label key={eq.id}>
+            <input
+              type="checkbox"
+              checked={selected.includes(eq.id)}
+              onChange={(e) =>
+                setSelected((ids) =>
+                  e.target.checked
+                    ? [...ids, eq.id]
+                    : ids.filter((id) => id !== eq.id),
+                )
+              }
+            />
+            <span>
+              <strong>{eq.name}</strong>
+              <small>
+                {eq.muscle} · {eq.zone}
+              </small>
+            </span>
+          </label>
+        ))}
+      </div>
+      <Notice>
+        Only equipment currently in service at {s.branch} is available. Programs
+        are assigned to {s.memberName}.
+      </Notice>
+      <button
+        type="submit"
+        className="btn primary full"
+        disabled={!active.some((e) => selected.includes(e.id))}
+      >
+        Assign program
+        <Icon name="check" size={17} />
+      </button>
+    </form>
+  );
 }
 
 function Preferences({ s, update, close, notify }) {
-  const [form,setForm]=useState(s.partnerPreferences);
-  return <form onSubmit={e=>{e.preventDefault();update(st=>({...st,partnerPreferences:form}));notify('Preferences saved. Profiles are sorted by your shared goals and availability.');close()}}>{[['goal','Training goal',['Build strength','Improve fitness']],['schedule','Preferred time',['Weekday evenings','Weekend mornings']],['level','Experience',['Beginner','Intermediate']]].map(([key,label,options])=><Field key={key} label={label}><select value={form[key]} onChange={e=>setForm(v=>({...v,[key]:e.target.value}))}>{options.map(o=><option key={o}>{o}</option>)}</select></Field>)}<button className="btn primary full" type="submit">Save preferences</button></form>;
+  const [form, setForm] = useState(s.partnerPreferences);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        update((st) => ({ ...st, partnerPreferences: form }));
+        notify(
+          "Preferences saved. Profiles are sorted by your shared goals and availability.",
+        );
+        close();
+      }}
+    >
+      {[
+        ["goal", "Training goal", ["Build strength", "Improve fitness"]],
+        [
+          "schedule",
+          "Preferred time",
+          ["Weekday evenings", "Weekend mornings"],
+        ],
+        ["level", "Experience", ["Beginner", "Intermediate"]],
+      ].map(([key, label, options]) => (
+        <Field key={key} label={label}>
+          <select
+            value={form[key]}
+            onChange={(e) => setForm((v) => ({ ...v, [key]: e.target.value }))}
+          >
+            {options.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
+          </select>
+        </Field>
+      ))}
+      <button className="btn primary full" type="submit">
+        Save preferences
+      </button>
+    </form>
+  );
 }
 function DocumentForm({ update, close, notify }) {
-  const [name,setName]=useState('Balanced meals, made simple'),[text,setText]=useState('A little everyday guidance:\n\nInclude a source of protein, vegetables, and carbohydrates in balanced meals. Drink water regularly and choose foods that suit your preferences.\n\nGeneral educational guidance only. Consult an appropriately qualified professional for individualized medical nutrition care.');
-  return <form onSubmit={e=>{e.preventDefault();if(!text.trim()||!name.trim())return;update(st=>({...st,documents:[{id:uid(),name:name.trim(),text,date:'Today'},...st.documents]}));notify('Guide shared with the member. It is available in their trainer profile.');close()}}><Field label="Document title"><input required value={name} maxLength={65} onChange={e=>setName(e.target.value)}/></Field><Field label="Guide content"><textarea required rows={7} value={text} maxLength={15000} onChange={e=>setText(e.target.value)}/></Field><Field label="Or import a plain-text document" hint="TXT files only, up to 15 KB. Content is stored in this browser."><input type="file" accept=".txt,text/plain" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>15000){notify('Choose a text file smaller than 15 KB.');return}const reader=new FileReader();reader.onload=()=>{setText(String(reader.result));setName(file.name.replace(/\.txt$/i,''))};reader.readAsText(file)}}/></Field><button type="submit" className="btn primary full">Share nutrition guide<Icon name="send" size={17}/></button></form>;
+  const [name, setName] = useState("Balanced meals, made simple"),
+    [text, setText] = useState(
+      "A little everyday guidance:\n\nInclude a source of protein, vegetables, and carbohydrates in balanced meals. Drink water regularly and choose foods that suit your preferences.\n\nGeneral educational guidance only. Consult an appropriately qualified professional for individualized medical nutrition care.",
+    );
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!text.trim() || !name.trim()) return;
+        update((st) => ({
+          ...st,
+          documents: [
+            { id: uid(), name: name.trim(), text, date: "Today" },
+            ...st.documents,
+          ],
+        }));
+        notify(
+          "Guide shared with the member. It is available in their trainer profile.",
+        );
+        close();
+      }}
+    >
+      <Field label="Document title">
+        <input
+          required
+          value={name}
+          maxLength={65}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </Field>
+      <Field label="Guide content">
+        <textarea
+          required
+          rows={7}
+          value={text}
+          maxLength={15000}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </Field>
+      <Field
+        label="Or import a plain-text document"
+        hint="TXT files only, up to 15 KB. Content is stored in this browser."
+      >
+        <input
+          type="file"
+          accept=".txt,text/plain"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (file.size > 15000) {
+              notify("Choose a text file smaller than 15 KB.");
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+              setText(String(reader.result));
+              setName(file.name.replace(/\.txt$/i, ""));
+            };
+            reader.readAsText(file);
+          }}
+        />
+      </Field>
+      <button type="submit" className="btn primary full">
+        Share nutrition guide
+        <Icon name="send" size={17} />
+      </button>
+    </form>
+  );
 }
 function BrandingForm({ s, update, close, notify }) {
-  const [name,setName]=useState(s.gymName),[branch,setBranch]=useState(s.branch),[logo,setLogo]=useState(s.logo);
-  return <form onSubmit={e=>{e.preventDefault();if(!name.trim()||!branch.trim())return;update(st=>({...st,gymName:name.trim(),branch:branch.trim(),logo}));notify('Your demo now feels like their club.');close()}}><Field label="Gym name"><input required maxLength={40} value={name} onChange={e=>setName(e.target.value)}/></Field><Field label="Branch"><input required maxLength={35} value={branch} onChange={e=>setBranch(e.target.value)}/></Field><Field label="Gym logo (optional)" hint="PNG, JPEG or WebP. Maximum 200 KB. Stored locally in this browser."><input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>200000||!['image/png','image/jpeg','image/webp'].includes(f.type)){notify('Choose a PNG, JPEG, or WebP smaller than 200 KB.');return}const reader=new FileReader();reader.onload=()=>setLogo(reader.result);reader.readAsDataURL(f)}}/></Field>{logo&&<div className="inline-actions space-bottom"><img src={logo} width="60" height="60" style={{objectFit:'contain'}} alt="Gym logo preview"/><Button variant="ghost" onClick={()=>setLogo('')}>Remove logo</Button></div>}<Notice>This customizes the sample gym across member and owner views. FORMA is the prototype’s working brand name.</Notice><button type="submit" className="btn primary full">Make it their club<Icon name="check" size={17}/></button></form>;
+  const [name, setName] = useState(s.gymName),
+    [branch, setBranch] = useState(s.branch),
+    [logo, setLogo] = useState(s.logo);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!name.trim() || !branch.trim()) return;
+        update((st) => ({
+          ...st,
+          gymName: name.trim(),
+          branch: branch.trim(),
+          logo,
+        }));
+        notify("Your demo now feels like their club.");
+        close();
+      }}
+    >
+      <Field label="Gym name">
+        <input
+          required
+          maxLength={40}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </Field>
+      <Field label="Branch">
+        <input
+          required
+          maxLength={35}
+          value={branch}
+          onChange={(e) => setBranch(e.target.value)}
+        />
+      </Field>
+      <Field
+        label="Gym logo (optional)"
+        hint="PNG, JPEG or WebP. Maximum 200 KB. Stored locally in this browser."
+      >
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            if (
+              f.size > 200000 ||
+              !["image/png", "image/jpeg", "image/webp"].includes(f.type)
+            ) {
+              notify("Choose a PNG, JPEG, or WebP smaller than 200 KB.");
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => setLogo(reader.result);
+            reader.readAsDataURL(f);
+          }}
+        />
+      </Field>
+      {logo && (
+        <div className="inline-actions space-bottom">
+          <img
+            src={logo}
+            width="60"
+            height="60"
+            style={{ objectFit: "contain" }}
+            alt="Gym logo preview"
+          />
+          <Button variant="ghost" onClick={() => setLogo("")}>
+            Remove logo
+          </Button>
+        </div>
+      )}
+      <Notice>
+        This customizes the sample gym across member and owner views. FORMA is
+        the prototype’s working brand name.
+      </Notice>
+      <button type="submit" className="btn primary full">
+        Make it their club
+        <Icon name="check" size={17} />
+      </button>
+    </form>
+  );
 }
-function NumberForm({ label, value, min=0, max=1000, onSubmit }) { const [number,setNumber]=useState(value);return <form onSubmit={e=>{e.preventDefault();onSubmit(Number(number))}}><Field label={label}><input type="number" min={min} max={max} required value={number} onChange={e=>setNumber(e.target.value)}/></Field><button type="submit" className="btn primary full">Save changes</button></form>; }
-function ChoiceForm({ label, value, options, onSubmit }) { const [choice,setChoice]=useState(value);return <form onSubmit={e=>{e.preventDefault();onSubmit(choice)}}><Field label={label}><select value={choice} onChange={e=>setChoice(e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></Field><button type="submit" className="btn primary full">Save changes</button></form>; }
-function ScheduleForm({ s, update, close, notify }) {const [date,setDate]=useState(TODAY),[time,setTime]=useState('17:30'),[error,setError]=useState('');return <form onSubmit={e=>{e.preventDefault();if(s.trainerSessions.some(t=>t.date===date&&t.time===time&&t.status==='Scheduled')){setError('That time is already reserved. Choose another slot.');return}update(st=>({...st,trainerSessions:[...st.trainerSessions,{id:uid(),member:s.memberName,date,time,status:'Scheduled'}]}));notify('Coaching session scheduled.');close()}}><Field label="Assigned member"><input readOnly value={s.memberName}/></Field><div className="two-col"><Field label="Date"><input required type="date" min={TODAY} value={date} onChange={e=>setDate(e.target.value)}/></Field><Field label="Time"><input required type="time" value={time} onChange={e=>setTime(e.target.value)}/></Field></div>{error&&<p className="error-text" role="alert">{error}</p>}<p className="muted">45-minute coaching session with {s.assignedTrainer}.</p><button type="submit" className="btn primary full">Schedule session</button></form>}
+function NumberForm({ label, value, min = 0, max = 1000, onSubmit }) {
+  const [number, setNumber] = useState(value);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(Number(number));
+      }}
+    >
+      <Field label={label}>
+        <input
+          type="number"
+          min={min}
+          max={max}
+          required
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+        />
+      </Field>
+      <button type="submit" className="btn primary full">
+        Save changes
+      </button>
+    </form>
+  );
+}
+function ChoiceForm({ label, value, options, onSubmit }) {
+  const [choice, setChoice] = useState(value);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(choice);
+      }}
+    >
+      <Field label={label}>
+        <select value={choice} onChange={(e) => setChoice(e.target.value)}>
+          {options.map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+      </Field>
+      <button type="submit" className="btn primary full">
+        Save changes
+      </button>
+    </form>
+  );
+}
+function ScheduleForm({ s, update, close, notify }) {
+  const [date, setDate] = useState(TODAY),
+    [time, setTime] = useState("17:30"),
+    [error, setError] = useState("");
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (
+          s.trainerSessions.some(
+            (t) =>
+              t.date === date && t.time === time && t.status === "Scheduled",
+          )
+        ) {
+          setError("That time is already reserved. Choose another slot.");
+          return;
+        }
+        update((st) => ({
+          ...st,
+          trainerSessions: [
+            ...st.trainerSessions,
+            {
+              id: uid(),
+              member: s.memberName,
+              date,
+              time,
+              status: "Scheduled",
+            },
+          ],
+        }));
+        notify("Coaching session scheduled.");
+        close();
+      }}
+    >
+      <Field label="Assigned member">
+        <input readOnly value={s.memberName} />
+      </Field>
+      <div className="two-col">
+        <Field label="Date">
+          <input
+            required
+            type="date"
+            min={TODAY}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </Field>
+        <Field label="Time">
+          <input
+            required
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
+        </Field>
+      </div>
+      {error && (
+        <p className="error-text" role="alert">
+          {error}
+        </p>
+      )}
+      <p className="muted">
+        45-minute coaching session with {s.assignedTrainer}.
+      </p>
+      <button type="submit" className="btn primary full">
+        Schedule session
+      </button>
+    </form>
+  );
+}
 
-export default function Dialogs({ dialog, s, update, close, notify, role, go, reset }) {
-  if(!dialog)return null;
-  const {type,data}=dialog;
-  let title='',description='',content=null,wide=false;
-  const done=(text)=>{notify(text);close()};
-  switch(type){
-    case 'workout': title='Your time to move';content=<WorkoutFlow workout={data} {...{s,update,notify,close}}/>;break;
-    case 'chat':title='A good conversation';content=<Chat {...{s,update,data,role}}/>;break;
-    case 'booking': {
-      title=data.name;description=`${data.category} · ${data.duration} minutes`;
-      const existing=s.bookings.find(b=>b.sessionId===data.id&&['Booked','Waitlisted','Attended'].includes(b.status)),places=availablePlaces(s,data);
-      content=<><div className={`booking-dialog-art ${data.color}`}><Icon name={['Yoga','Recovery','Spa'].includes(data.category)?'leaf':'dumbbell'} size={62}/></div><div className="plan-details"><span>When<strong>{data.day===0?'Today':data.day===1?'Tomorrow':'Saturday'} · {data.time}</strong></span><span>With<strong>{data.trainer}</strong></span><span>Where<strong>{s.branch}</strong></span><span>Price<strong>{data.price?money(data.price):'Included in your membership'}</strong></span><span>Availability<strong>{places?`${places} places left`:'Full · waitlist available'}</strong></span></div>{existing?<><Notice icon="success">{existing.status==='Waitlisted'?'You’re on the waitlist. This does not reserve a place.':existing.status==='Attended'?'Attendance verified. Your points are in your wallet.':'You’re booked. Your spot is saved.'}</Notice>{existing.status!=='Attended'&&<Button className="full" variant="secondary" onClick={()=>{update(st=>cancelBooking(st,existing.id));done('Your reservation has been cancelled.')}}>Cancel reservation</Button>}</>:<><Notice>{places?'You can cancel before the session starts. Any listed charge is simulated.':'Join the waitlist and we’ll show your pending place. No payment is taken.'}</Notice><Button className="full" onClick={()=>{update(st=>bookSession(st,data.id));done(places?'Your spot is saved. See you there!':'You’re on the demo waitlist.')}}>{places?'Confirm booking':'Join waitlist'}<Icon name="check" size={17}/></Button></>}</>;break;
+export default function Dialogs({
+  dialog,
+  s,
+  update,
+  close,
+  notify,
+  role,
+  go,
+  reset,
+}) {
+  if (!dialog) return null;
+  const { type, data } = dialog;
+  let title = "",
+    description = "",
+    content = null,
+    wide = false;
+  const done = (text) => {
+    notify(text);
+    close();
+  };
+  switch (type) {
+    case "workout":
+      title = "Your time to move";
+      content = (
+        <WorkoutFlow workout={data} {...{ s, update, notify, close }} />
+      );
+      break;
+    case "chat":
+      title = "A good conversation";
+      content = <Chat {...{ s, update, data, role }} />;
+      break;
+    case "booking": {
+      title = data.name;
+      description = `${data.category} · ${data.duration} minutes`;
+      const existing = s.bookings.find(
+          (b) =>
+            b.sessionId === data.id &&
+            ["Booked", "Waitlisted", "Attended"].includes(b.status),
+        ),
+        places = availablePlaces(s, data);
+      content = (
+        <>
+          <div className={`booking-dialog-art ${data.color}`}>
+            <Icon
+              name={
+                ["Yoga", "Recovery", "Spa"].includes(data.category)
+                  ? "leaf"
+                  : "dumbbell"
+              }
+              size={62}
+            />
+          </div>
+          <div className="plan-details">
+            <span>
+              When
+              <strong>
+                {data.day === 0
+                  ? "Today"
+                  : data.day === 1
+                    ? "Tomorrow"
+                    : "Saturday"}{" "}
+                · {data.time}
+              </strong>
+            </span>
+            <span>
+              With<strong>{data.trainer}</strong>
+            </span>
+            <span>
+              Where<strong>{s.branch}</strong>
+            </span>
+            <span>
+              Price
+              <strong>
+                {data.price ? money(data.price) : "Included in your membership"}
+              </strong>
+            </span>
+            <span>
+              Availability
+              <strong>
+                {places ? `${places} places left` : "Full · waitlist available"}
+              </strong>
+            </span>
+          </div>
+          {existing ? (
+            <>
+              <Notice icon="success">
+                {existing.status === "Waitlisted"
+                  ? "You’re on the waitlist. This does not reserve a place."
+                  : existing.status === "Attended"
+                    ? "Attendance verified. Your points are in your wallet."
+                    : "You’re booked. Your spot is saved."}
+              </Notice>
+              {existing.status !== "Attended" && (
+                <Button
+                  className="full"
+                  variant="secondary"
+                  onClick={() => {
+                    update((st) => cancelBooking(st, existing.id));
+                    done("Your reservation has been cancelled.");
+                  }}
+                >
+                  Cancel reservation
+                </Button>
+              )}
+            </>
+          ) : (
+            <>
+              <Notice>
+                {places
+                  ? "You can cancel before the session starts. Any listed charge is simulated."
+                  : "Join the waitlist and we’ll show your pending place. No payment is taken."}
+              </Notice>
+              <Button
+                className="full"
+                onClick={() => {
+                  update((st) => bookSession(st, data.id));
+                  done(
+                    places
+                      ? "Your spot is saved. See you there!"
+                      : "You’re on the demo waitlist.",
+                  );
+                }}
+              >
+                {places ? "Confirm booking" : "Join waitlist"}
+                <Icon name="check" size={17} />
+              </Button>
+            </>
+          )}
+        </>
+      );
+      break;
     }
-    case 'cancelBooking':title='Make room for another day?';content=<><p className="muted">Cancel this reservation? You can book another session when it suits you.</p><Button className="full" onClick={()=>{update(st=>cancelBooking(st,data.id));done('Reservation cancelled.')}}>Cancel reservation</Button></>;break;
-    case 'reschedule':title='Find a better moment';content=<><p className="muted">Choose a new session. Your original reservation is cancelled only when the new one is confirmed.</p>{facilities.filter(f=>f.id!==data.sessionId&&availablePlaces(s,f)>0&&!s.bookings.some(b=>b.sessionId===f.id&&['Booked','Waitlisted','Attended'].includes(b.status))).map(f=><div className="list-row" key={f.id}><span className="grow"><strong>{f.name}</strong><small>{f.day===0?'Today':f.day===1?'Tomorrow':'Saturday'} · {f.time} · {f.price?money(f.price):'Included'}</small></span><Button variant="secondary" onClick={()=>{update(st=>bookSession(cancelBooking(st,data.id),f.id));done(`Moved to ${f.name}.`)}}>Choose</Button></div>)}</>;break;
-    case 'equipment':title=data.name;content=<><div className={`equipment-dialog-art ${data.status==='Maintenance'?'cream':'sage'}`}><Icon name={data.icon} size={70}/></div><div className="spread space-top"><Badge color="sage">{data.muscle}</Badge><Badge color={data.status==='Maintenance'?'cream':'sage'}>{data.status==='Maintenance'?'Under maintenance':'In service'}</Badge></div><h3>Make your next move with confidence.</h3><p>{data.instructions}</p><p className="muted"><Icon name="pin" size={15}/> {data.zone} · {s.branch}</p>{data.status==='Maintenance'?<Notice>Please choose another machine while this equipment is being serviced.</Notice>:<><h3>Put it into practice</h3>{workouts.filter(w=>w.exercises.some(e=>e.equipment===data.id)).map(w=><button className="list-row clickable full" key={w.id} onClick={()=>{close();go('train','member')}}><Icon name="dumbbell"/><span className="grow align-left"><strong>{w.name}</strong><small>{w.duration} min · Explore in Training</small></span><Icon name="arrow"/></button>)}</>}{role==='admin'&&<Button className="full space-top" icon="edit" onClick={()=>go('editEquipment',null,data)}>Edit equipment & position</Button>}</>;break;
-    case 'editEquipment':title=data?'Update your gym map':'Add a new machine';content=<EquipmentEditor {...{data,s,update,close,notify}}/>;break;
-    case 'occupancy':title='Find your room to move';description=`${s.gymName} · ${s.branch}`;content=<><div className="occupancy-dialog"><Ring value={s.occupancy/s.capacity*100} size={160}><strong>{s.occupancy}</strong><small>members inside</small></Ring><Badge color="sage">{s.occupancy<60?'A comfortable time to visit':'Getting lively'}</Badge></div><h3>A typical day at your club</h3><Bars values={[25,42,35,58,87,68,38]} labels={['6am','9am','12pm','3pm','6pm','8pm','10pm']} active={4}/><Notice>Current count is simulated from demo check-ins. Busy periods are illustrative historical data.</Notice></>;break;
-    case 'occupancyAdmin':title='Branch attendance simulator';description='Preview how access-control events would update member occupancy.';content=<NumberForm label={`Current count (capacity ${s.capacity})`} value={s.occupancy} min={s.checkedIn?1:0} max={s.capacity} onSubmit={n=>{update(st=>({...st,occupancy:n}));done('Branch occupancy updated across the demo.')}}/>;break;
-    case 'preferences':title='Your kind of training partner';content=<Preferences {...{s,update,close,notify}}/>;break;
-    case 'safety':title='Your comfort comes first';description=data.name;content=<><p className="muted">Hide a member from your matching pool or submit a demo report. No real person is contacted.</p><Button className="full space-bottom" variant="secondary" icon="ban" onClick={()=>{update(st=>({...st,blocked:[...st.blocked,data.id]}));done('Profile hidden and messaging removed from your matching view.')}}>Block this demo profile</Button><Button className="full" variant="secondary" icon="flag" onClick={()=>{update(st=>({...st,reports:[...st.reports,{id:uid(),partnerId:data.id,reason:'Demo safety report'}],blocked:[...st.blocked,data.id]}));done('Demo report recorded. Profile hidden.')}}>Report & hide profile</Button></>;break;
-    case 'redeem':title='A little reward for you';content=<><div className={`booking-dialog-art ${data.color}`}><Icon name={data.icon} size={60}/></div><h2>{data.name}</h2><p>{data.description}</p><div className="order-totals"><span>Reward cost<strong>{data.points.toLocaleString()} points</strong></span><span>Balance after redemption<strong>{(s.points-data.points).toLocaleString()} points</strong></span></div><Notice>Demo reward only. No real restaurant or gym is notified.</Notice><Button className="full" disabled={s.points<data.points||s.rewardInventory[data.id]<1} onClick={()=>{update(st=>redeemReward(st,data.id));done('Reward redeemed. Your code is ready in Your good things.')}}>Redeem {data.points.toLocaleString()} points<Icon name="gift" size={17}/></Button></>;break;
-    case 'earnPoints':title='Small steps add up';content=<>{[['Verified gym check-in',10],['Completed workout',20],['Attended booked class',15],['Weekly challenge',100]].map(([label,pts])=><div className="list-row" key={label}><span className="square-icon sage"><Icon name="plus"/></span><strong className="grow">{label}</strong><Badge color="sage">+{pts} pts</Badge></div>)}<Notice>Check-in and workout rewards are capped at one each per demo day. Duplicate activity cannot earn duplicate points.</Notice></>;break;
-    case 'meal':title=data.meal.name;content=<><div className={`meal-detail-art ${data.meal.color}`}>{data.meal.emoji}</div><p>{data.meal.description}</p><div className="mini-metrics"><span><strong>{data.meal.protein}g</strong>protein</span><span><strong>{data.meal.calories}</strong>sample kcal</span><span><strong>{money(data.meal.price)}</strong>per serving</span></div><p className="muted">{data.meal.restaurant} · {data.meal.distance} from your branch</p><Button className="full" icon="plus" onClick={()=>{data.add(data.meal.id);done('A little goodness added to your bag.')}}>Add to bag</Button></>;break;
-    case 'checkout':title='Your next good meal';content=<Checkout {...{data,s,update,close,notify}}/>;break;
-    case 'refund':title='Cancel this demo order?';content=<><p className="muted">The order will be marked refunded. Any reward points used for its discount will return to your wallet.</p><Button className="full" onClick={()=>{update(st=>refundOrder(st,data.id));done('Demo order refunded. Any used points have been returned.')}}>Confirm cancellation & refund</Button></>;break;
-    case 'plans':title='Room to grow your routine';content=<div className="plan-options">{[['Club Plus',1500,'Gym access, classes, two guest visits and your rewards wallet.'],['Club Complete',2200,'All Plus benefits, recovery access and four guest visits.']].map(([name,price,desc])=><section className={`plan-option ${s.plan===name?'selected':''}`} key={name}><Badge color="sage">{s.plan===name?'YOUR CURRENT PLAN':'A LITTLE MORE FOR YOU'}</Badge><h2>{name}</h2><h3>{money(price)}<small className="muted"> / month</small></h3><p>{desc}</p><Button className="full" variant={s.plan===name?'secondary':'primary'} disabled={s.plan===name} onClick={()=>{update(st=>({...st,plan:name,payments:[{id:uid(),label:`${name} · demo plan change`,amount:price,date:'22 Oct 2026',status:'Paid'},...st.payments]}));done('Demo membership plan updated. No real payment was taken.')}}>{s.plan===name?'Current plan':'Confirm demo plan change'}</Button></section>)}<Notice>Plan changes simulate an immediate full-price monthly purchase. No real charges or prorating.</Notice></div>;break;
-    case 'renew':title='Keep your good thing going';content=<><div className="plan-details"><span>Membership<strong>{s.plan}</strong></span><span>Renewal period<strong>One month</strong></span><span>Demo payment<strong>{money(s.plan==='Club Plus'?1500:2200)}</strong></span></div><Notice>No card details, real payment, or automatic recurring billing.</Notice><Button className="full" onClick={()=>{update(st=>{const parts=st.renewal.split(' ');const date=new Date(`${parts[1]} ${parts[0]}, ${parts[2]} 12:00:00`);date.setMonth(date.getMonth()+1);return {...st,renewal:date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),payments:[{id:uid(),label:`${st.plan} · demo renewal`,amount:st.plan==='Club Plus'?1500:2200,date:'22 Oct 2026',status:'Paid'},...st.payments]}});done('Demo membership renewed for one month.')}}>Confirm simulated renewal</Button></>;break;
-    case 'wearable':title=s.wearable?'Your connection, your choice':'A more connected routine';content=<WearableFlow {...{s,update,done}}/>;break;
-    case 'client':title=role==='member'?'Your coaching space':s.memberName;content=<><div className="chat-person"><Avatar initials="AM" size="large"/><span><strong>{s.memberName}</strong><small>{s.branch} · Build strength · Intermediate</small></span></div><div className="plan-details"><span>Assigned coach<strong>{s.assignedTrainer}</strong></span><span>Current program<strong>{s.customProgram?.name||s.program}</strong></span><span>New demo sessions<strong>{s.workoutLogs.length}</strong></span></div>{role==='trainer'&&(s.shareHealth&&s.wearable?<div className="mini-metrics"><span><strong>8,420</strong>sample steps</span><span><strong>64 bpm</strong>sample resting heart rate</span></div>:<Notice icon="shield">Wearable metrics have not been shared. Ask the member to enable sharing in their Health page.</Notice>)}{role!=='admin'&&<><h3>Your shared guidance</h3>{s.documents.map(doc=><div className="document-card" key={doc.id}><Icon name="file"/><div><h3>{doc.name}</h3><DownloadDoc doc={doc}/></div></div>)}<Button className="full space-top" icon="chat" onClick={()=>go('chat',null,{channel:'trainer',name:role==='trainer'?s.memberName:s.assignedTrainer})}>Open coaching conversation</Button></>}</>;break;
-    case 'programBuilder':title='Built around their next step';content=<ProgramBuilder {...{s,update,close,notify}}/>;break;
-    case 'document':title='Share a little everyday guidance';content=<DocumentForm {...{update,close,notify}}/>;break;
-    case 'trainerSession':title='Make time for good coaching';content=<ScheduleForm {...{s,update,close,notify}}/>;break;
-    case 'cancelTrainerSession':title='Cancel this coaching session?';content=<><p>{data.member} · {data.date} · {data.time}</p><Button className="full" onClick={()=>{update(st=>({...st,trainerSessions:st.trainerSessions.map(v=>v.id===data.id?{...v,status:'Cancelled'}:v)}));done('Coaching session cancelled.')}}>Confirm cancellation</Button></>;break;
-    case 'assignTrainer':title='The right support for your member';content=<ChoiceForm label="Assigned personal trainer" value={s.assignedTrainer} options={['Omar Adel','Nour Hassan','Laila Ahmed']} onSubmit={name=>{update(st=>({...st,assignedTrainer:name}));done('Trainer assigned. Coaching views are up to date.')}}/>;break;
-    case 'inventory':title=data.name;content=<NumberForm label="Rewards available" value={s.rewardInventory[data.id]} max={999} onSubmit={n=>{update(st=>({...st,rewardInventory:{...st.rewardInventory,[data.id]:n}}));done('Reward inventory updated.')}}/>;break;
-    case 'partnerInfo':title=data.name;content=<><Badge color="sage">{s.branch} partner</Badge><p className="space-top">This partner is associated with your gym branch. Members can explore offers, redeem eligible rewards, and place simulated pickup or delivery orders.</p><div className="plan-details"><span>Commission example<strong>10% of discounted item subtotal</strong></span><span>Partner settlement<strong>Illustrative only</strong></span><span>Reward funding<strong>To be agreed before a pilot</strong></span></div><Notice>Payment fees, taxes, refunds, platform/gym allocation, and commercial terms require validation before launch.</Notice></>;break;
-    case 'branding':title='Make it feel like their club';content=<BrandingForm {...{s,update,close,notify}}/>;break;
-    case 'platformPlan':title='A plan for every stage';content=<ChoiceForm label="Gym SaaS plan (illustrative)" value={s.saasPlan} options={['Starter','Growth','Enterprise']} onSubmit={plan=>{update(st=>({...st,saasPlan:plan}));done('Demo SaaS plan updated. No billing change was made.')}}/>;break;
-    case 'notifications':title='A little heads-up';content=<><div className="list-row"><span className="square-icon sage"><Icon name="dumbbell"/></span><span><strong>Your next session is ready</strong><small>{s.customProgram?.name||s.program}</small></span></div><div className="list-row"><span className="square-icon cream"><Icon name="gift"/></span><span><strong>You’ve earned something good</strong><small>{s.points.toLocaleString()} points in your rewards wallet</small></span></div>{s.bookings.filter(b=>b.status==='Booked').map(b=><div className="list-row" key={b.id}><Icon name="calendar"/><span><strong>Your spot is saved</strong><small>{facilities.find(f=>f.id===b.sessionId)?.name}</small></span></div>)}<Notice>In-app demo notifications only. No push notifications are sent.</Notice></>;break;
-    case 'waitlistInfo':title='A place in line';content=<><Badge color="cream">Waitlisted</Badge><p>Your member has joined the waitlist for {facilities.find(f=>f.id===data.sessionId)?.name}. The sample session is at capacity.</p><Notice>A waitlist entry does not guarantee a reservation. Automatic promotion and external notifications are outside this demo.</Notice></>;break;
-    case 'reset':title='A fresh start for your next meeting';content=<><p className="muted">Reset this browser’s demo bookings, rewards, orders, messages, programs, and gym branding to the original sample data?</p><Button className="full" icon="reset" onClick={()=>{reset();done('Your demo is fresh and ready for the next meeting.')}}>Reset all demo data</Button></>;break;
-    case 'help':title='Your gym, connected';content=<><p>Explore nine connected features through the member, trainer, and gym admin roles. Use the role switcher above the page to see the same activity from another perspective.</p><div className="plan-details"><span>Design direction<strong>SpineEdge-inspired green palette</strong></span><span>Storage<strong>This browser only</strong></span><span>Integrations<strong>Simulated for presentations</strong></span></div><Notice>Use “Walk me through” for a guided sales tour. Personalize the gym in Demo settings, then reset before your next meeting.</Notice></>;break;
-    default:title='Ready for your next step';content=<p>This part of your club experience is ready to explore.</p>;
+    case "cancelBooking":
+      title = "Make room for another day?";
+      content = (
+        <>
+          <p className="muted">
+            Cancel this reservation? You can book another session when it suits
+            you.
+          </p>
+          <Button
+            className="full"
+            onClick={() => {
+              update((st) => cancelBooking(st, data.id));
+              done("Reservation cancelled.");
+            }}
+          >
+            Cancel reservation
+          </Button>
+        </>
+      );
+      break;
+    case "reschedule":
+      title = "Find a better moment";
+      content = (
+        <>
+          <p className="muted">
+            Choose a new session. Your original reservation is cancelled only
+            when the new one is confirmed.
+          </p>
+          {facilities
+            .filter(
+              (f) =>
+                f.id !== data.sessionId &&
+                availablePlaces(s, f) > 0 &&
+                !s.bookings.some(
+                  (b) =>
+                    b.sessionId === f.id &&
+                    ["Booked", "Waitlisted", "Attended"].includes(b.status),
+                ),
+            )
+            .map((f) => (
+              <div className="list-row" key={f.id}>
+                <span className="grow">
+                  <strong>{f.name}</strong>
+                  <small>
+                    {f.day === 0
+                      ? "Today"
+                      : f.day === 1
+                        ? "Tomorrow"
+                        : "Saturday"}{" "}
+                    · {f.time} · {f.price ? money(f.price) : "Included"}
+                  </small>
+                </span>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    update((st) =>
+                      bookSession(cancelBooking(st, data.id), f.id),
+                    );
+                    done(`Moved to ${f.name}.`);
+                  }}
+                >
+                  Choose
+                </Button>
+              </div>
+            ))}
+        </>
+      );
+      break;
+    case "equipment":
+      title = data.name;
+      content = (
+        <>
+          <div
+            className={`equipment-dialog-art ${data.status === "Maintenance" ? "cream" : "sage"}`}
+          >
+            <Icon name={data.icon} size={70} />
+          </div>
+          <div className="spread space-top">
+            <Badge color="sage">{data.muscle}</Badge>
+            <Badge color={data.status === "Maintenance" ? "cream" : "sage"}>
+              {data.status === "Maintenance"
+                ? "Under maintenance"
+                : "In service"}
+            </Badge>
+          </div>
+          <h3>Make your next move with confidence.</h3>
+          <p>{data.instructions}</p>
+          <p className="muted">
+            <Icon name="pin" size={15} /> {data.zone} · {s.branch}
+          </p>
+          {data.status === "Maintenance" ? (
+            <Notice>
+              Please choose another machine while this equipment is being
+              serviced.
+            </Notice>
+          ) : (
+            <>
+              <h3>Put it into practice</h3>
+              {workouts
+                .filter((w) => w.exercises.some((e) => e.equipment === data.id))
+                .map((w) => (
+                  <button
+                    className="list-row clickable full"
+                    key={w.id}
+                    onClick={() => {
+                      close();
+                      go("train", "member");
+                    }}
+                  >
+                    <Icon name="dumbbell" />
+                    <span className="grow align-left">
+                      <strong>{w.name}</strong>
+                      <small>{w.duration} min · Explore in Training</small>
+                    </span>
+                    <Icon name="arrow" />
+                  </button>
+                ))}
+            </>
+          )}
+          {role === "admin" && (
+            <Button
+              className="full space-top"
+              icon="edit"
+              onClick={() => go("editEquipment", null, data)}
+            >
+              Edit equipment & position
+            </Button>
+          )}
+        </>
+      );
+      break;
+    case "editEquipment":
+      title = data ? "Update your gym map" : "Add a new machine";
+      content = <EquipmentEditor {...{ data, s, update, close, notify }} />;
+      break;
+    case "occupancy":
+      title = "Find your room to move";
+      description = `${s.gymName} · ${s.branch}`;
+      content = (
+        <>
+          <div className="occupancy-dialog">
+            <Ring value={(s.occupancy / s.capacity) * 100} size={160}>
+              <strong>{s.occupancy}</strong>
+              <small>members inside</small>
+            </Ring>
+            <Badge color="sage">
+              {s.occupancy < 60
+                ? "A comfortable time to visit"
+                : "Getting lively"}
+            </Badge>
+          </div>
+          <h3>A typical day at your club</h3>
+          <Bars
+            values={[25, 42, 35, 58, 87, 68, 38]}
+            labels={["6am", "9am", "12pm", "3pm", "6pm", "8pm", "10pm"]}
+            active={4}
+          />
+          <Notice>
+            Current count is simulated from demo check-ins. Busy periods are
+            illustrative historical data.
+          </Notice>
+        </>
+      );
+      break;
+    case "occupancyAdmin":
+      title = "Branch attendance simulator";
+      description =
+        "Preview how access-control events would update member occupancy.";
+      content = (
+        <NumberForm
+          label={`Current count (capacity ${s.capacity})`}
+          value={s.occupancy}
+          min={s.checkedIn ? 1 : 0}
+          max={s.capacity}
+          onSubmit={(n) => {
+            update((st) => ({ ...st, occupancy: n }));
+            done("Branch occupancy updated across the demo.");
+          }}
+        />
+      );
+      break;
+    case "preferences":
+      title = "Your kind of training partner";
+      content = <Preferences {...{ s, update, close, notify }} />;
+      break;
+    case "safety":
+      title = "Your comfort comes first";
+      description = data.name;
+      content = (
+        <>
+          <p className="muted">
+            Hide a member from your matching pool or submit a demo report. No
+            real person is contacted.
+          </p>
+          <Button
+            className="full space-bottom"
+            variant="secondary"
+            icon="ban"
+            onClick={() => {
+              update((st) => ({ ...st, blocked: [...st.blocked, data.id] }));
+              done(
+                "Profile hidden and messaging removed from your matching view.",
+              );
+            }}
+          >
+            Block this demo profile
+          </Button>
+          <Button
+            className="full"
+            variant="secondary"
+            icon="flag"
+            onClick={() => {
+              update((st) => ({
+                ...st,
+                reports: [
+                  ...st.reports,
+                  {
+                    id: uid(),
+                    partnerId: data.id,
+                    reason: "Demo safety report",
+                  },
+                ],
+                blocked: [...st.blocked, data.id],
+              }));
+              done("Demo report recorded. Profile hidden.");
+            }}
+          >
+            Report & hide profile
+          </Button>
+        </>
+      );
+      break;
+    case "redeem":
+      title = "A little reward for you";
+      content = (
+        <>
+          <div className={`booking-dialog-art ${data.color}`}>
+            <Icon name={data.icon} size={60} />
+          </div>
+          <h2>{data.name}</h2>
+          <p>{data.description}</p>
+          <div className="order-totals">
+            <span>
+              Reward cost<strong>{data.points.toLocaleString()} points</strong>
+            </span>
+            <span>
+              Balance after redemption
+              <strong>
+                {(s.points - data.points).toLocaleString()} points
+              </strong>
+            </span>
+          </div>
+          <Notice>
+            Demo reward only. No real restaurant or gym is notified.
+          </Notice>
+          <Button
+            className="full"
+            disabled={s.points < data.points || s.rewardInventory[data.id] < 1}
+            onClick={() => {
+              update((st) => redeemReward(st, data.id));
+              done("Reward redeemed. Your code is ready in Your good things.");
+            }}
+          >
+            Redeem {data.points.toLocaleString()} points
+            <Icon name="gift" size={17} />
+          </Button>
+        </>
+      );
+      break;
+    case "earnPoints":
+      title = "Small steps add up";
+      content = (
+        <>
+          {[
+            ["Verified gym check-in", 10],
+            ["Completed workout", 20],
+            ["Attended booked class", 15],
+            ["Weekly challenge", 100],
+          ].map(([label, pts]) => (
+            <div className="list-row" key={label}>
+              <span className="square-icon sage">
+                <Icon name="plus" />
+              </span>
+              <strong className="grow">{label}</strong>
+              <Badge color="sage">+{pts} pts</Badge>
+            </div>
+          ))}
+          <Notice>
+            Check-in and workout rewards are capped at one each per demo day.
+            Duplicate activity cannot earn duplicate points.
+          </Notice>
+        </>
+      );
+      break;
+    case "meal":
+      title = data.meal.name;
+      content = (
+        <>
+          <div className={`meal-detail-art ${data.meal.color}`}>
+            {data.meal.emoji}
+          </div>
+          <p>{data.meal.description}</p>
+          <div className="mini-metrics">
+            <span>
+              <strong>{data.meal.protein}g</strong>protein
+            </span>
+            <span>
+              <strong>{data.meal.calories}</strong>sample kcal
+            </span>
+            <span>
+              <strong>{money(data.meal.price)}</strong>per serving
+            </span>
+          </div>
+          <p className="muted">
+            {data.meal.restaurant} · {data.meal.distance} from your branch
+          </p>
+          <Button
+            className="full"
+            icon="plus"
+            onClick={() => {
+              data.add(data.meal.id);
+              done("A little goodness added to your bag.");
+            }}
+          >
+            Add to bag
+          </Button>
+        </>
+      );
+      break;
+    case "checkout":
+      title = "Your next good meal";
+      content = <Checkout {...{ data, s, update, close, notify }} />;
+      break;
+    case "refund":
+      title = "Cancel this demo order?";
+      content = (
+        <>
+          <p className="muted">
+            The order will be marked refunded. Any reward points used for its
+            discount will return to your wallet.
+          </p>
+          <Button
+            className="full"
+            onClick={() => {
+              update((st) => refundOrder(st, data.id));
+              done("Demo order refunded. Any used points have been returned.");
+            }}
+          >
+            Confirm cancellation & refund
+          </Button>
+        </>
+      );
+      break;
+    case "plans":
+      title = "Room to grow your routine";
+      content = (
+        <div className="plan-options">
+          {[
+            [
+              "Club Plus",
+              1500,
+              "Gym access, classes, two guest visits and your rewards wallet.",
+            ],
+            [
+              "Club Complete",
+              2200,
+              "All Plus benefits, recovery access and four guest visits.",
+            ],
+          ].map(([name, price, desc]) => (
+            <section
+              className={`plan-option ${s.plan === name ? "selected" : ""}`}
+              key={name}
+            >
+              <Badge color="sage">
+                {s.plan === name
+                  ? "YOUR CURRENT PLAN"
+                  : "A LITTLE MORE FOR YOU"}
+              </Badge>
+              <h2>{name}</h2>
+              <h3>
+                {money(price)}
+                <small className="muted"> / month</small>
+              </h3>
+              <p>{desc}</p>
+              <Button
+                className="full"
+                variant={s.plan === name ? "secondary" : "primary"}
+                disabled={s.plan === name}
+                onClick={() => {
+                  update((st) => ({
+                    ...st,
+                    plan: name,
+                    payments: [
+                      {
+                        id: uid(),
+                        label: `${name} · demo plan change`,
+                        amount: price,
+                        date: "22 Oct 2026",
+                        status: "Paid",
+                      },
+                      ...st.payments,
+                    ],
+                  }));
+                  done(
+                    "Demo membership plan updated. No real payment was taken.",
+                  );
+                }}
+              >
+                {s.plan === name ? "Current plan" : "Confirm demo plan change"}
+              </Button>
+            </section>
+          ))}
+          <Notice>
+            Plan changes simulate an immediate full-price monthly purchase. No
+            real charges or prorating.
+          </Notice>
+        </div>
+      );
+      break;
+    case "renew":
+      title = "Keep your good thing going";
+      content = (
+        <>
+          <div className="plan-details">
+            <span>
+              Membership<strong>{s.plan}</strong>
+            </span>
+            <span>
+              Renewal period<strong>One month</strong>
+            </span>
+            <span>
+              Demo payment
+              <strong>{money(s.plan === "Club Plus" ? 1500 : 2200)}</strong>
+            </span>
+          </div>
+          <Notice>
+            No card details, real payment, or automatic recurring billing.
+          </Notice>
+          <Button
+            className="full"
+            onClick={() => {
+              update((st) => {
+                const parts = st.renewal.split(" ");
+                const date = new Date(
+                  `${parts[1]} ${parts[0]}, ${parts[2]} 12:00:00`,
+                );
+                date.setMonth(date.getMonth() + 1);
+                return {
+                  ...st,
+                  renewal: date.toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }),
+                  payments: [
+                    {
+                      id: uid(),
+                      label: `${st.plan} · demo renewal`,
+                      amount: st.plan === "Club Plus" ? 1500 : 2200,
+                      date: "22 Oct 2026",
+                      status: "Paid",
+                    },
+                    ...st.payments,
+                  ],
+                };
+              });
+              done("Demo membership renewed for one month.");
+            }}
+          >
+            Confirm simulated renewal
+          </Button>
+        </>
+      );
+      break;
+    case "wearable":
+      title = s.wearable
+        ? "Your connection, your choice"
+        : "A more connected routine";
+      content = <WearableFlow {...{ s, update, done }} />;
+      break;
+    case "client":
+      title = role === "member" ? "Your coaching space" : s.memberName;
+      content = (
+        <>
+          <div className="chat-person">
+            <Avatar initials="AM" size="large" />
+            <span>
+              <strong>{s.memberName}</strong>
+              <small>{s.branch} · Build strength · Intermediate</small>
+            </span>
+          </div>
+          <div className="plan-details">
+            <span>
+              Assigned coach<strong>{s.assignedTrainer}</strong>
+            </span>
+            <span>
+              Current program
+              <strong>{s.customProgram?.name || s.program}</strong>
+            </span>
+            <span>
+              New demo sessions<strong>{s.workoutLogs.length}</strong>
+            </span>
+          </div>
+          {role === "trainer" &&
+            (s.shareHealth && s.wearable ? (
+              <div className="mini-metrics">
+                <span>
+                  <strong>8,420</strong>sample steps
+                </span>
+                <span>
+                  <strong>64 bpm</strong>sample resting heart rate
+                </span>
+              </div>
+            ) : (
+              <Notice icon="shield">
+                Wearable metrics have not been shared. Ask the member to enable
+                sharing in their Health page.
+              </Notice>
+            ))}
+          {role !== "admin" && (
+            <>
+              <h3>Your shared guidance</h3>
+              {s.documents.map((doc) => (
+                <div className="document-card" key={doc.id}>
+                  <Icon name="file" />
+                  <div>
+                    <h3>{doc.name}</h3>
+                    <DownloadDoc doc={doc} />
+                  </div>
+                </div>
+              ))}
+              <Button
+                className="full space-top"
+                icon="chat"
+                onClick={() =>
+                  go("chat", null, {
+                    channel: "trainer",
+                    name: role === "trainer" ? s.memberName : s.assignedTrainer,
+                  })
+                }
+              >
+                Open coaching conversation
+              </Button>
+            </>
+          )}
+        </>
+      );
+      break;
+    case "programBuilder":
+      title = "Built around their next step";
+      content = <ProgramBuilder {...{ s, update, close, notify }} />;
+      break;
+    case "document":
+      title = "Share a little everyday guidance";
+      content = <DocumentForm {...{ update, close, notify }} />;
+      break;
+    case "trainerSession":
+      title = "Make time for good coaching";
+      content = <ScheduleForm {...{ s, update, close, notify }} />;
+      break;
+    case "cancelTrainerSession":
+      title = "Cancel this coaching session?";
+      content = (
+        <>
+          <p>
+            {data.member} · {data.date} · {data.time}
+          </p>
+          <Button
+            className="full"
+            onClick={() => {
+              update((st) => ({
+                ...st,
+                trainerSessions: st.trainerSessions.map((v) =>
+                  v.id === data.id ? { ...v, status: "Cancelled" } : v,
+                ),
+              }));
+              done("Coaching session cancelled.");
+            }}
+          >
+            Confirm cancellation
+          </Button>
+        </>
+      );
+      break;
+    case "assignTrainer":
+      title = "The right support for your member";
+      content = (
+        <ChoiceForm
+          label="Assigned personal trainer"
+          value={s.assignedTrainer}
+          options={["Omar Adel", "Nour Hassan", "Laila Ahmed"]}
+          onSubmit={(name) => {
+            update((st) => ({ ...st, assignedTrainer: name }));
+            done("Trainer assigned. Coaching views are up to date.");
+          }}
+        />
+      );
+      break;
+    case "inventory":
+      title = data.name;
+      content = (
+        <NumberForm
+          label="Rewards available"
+          value={s.rewardInventory[data.id]}
+          max={999}
+          onSubmit={(n) => {
+            update((st) => ({
+              ...st,
+              rewardInventory: { ...st.rewardInventory, [data.id]: n },
+            }));
+            done("Reward inventory updated.");
+          }}
+        />
+      );
+      break;
+    case "partnerInfo":
+      title = data.name;
+      content = (
+        <>
+          <Badge color="sage">{s.branch} partner</Badge>
+          <p className="space-top">
+            This partner is associated with your gym branch. Members can explore
+            offers, redeem eligible rewards, and place simulated pickup or
+            delivery orders.
+          </p>
+          <div className="plan-details">
+            <span>
+              Commission example<strong>10% of discounted item subtotal</strong>
+            </span>
+            <span>
+              Partner settlement<strong>Illustrative only</strong>
+            </span>
+            <span>
+              Reward funding<strong>To be agreed before a pilot</strong>
+            </span>
+          </div>
+          <Notice>
+            Payment fees, taxes, refunds, platform/gym allocation, and
+            commercial terms require validation before launch.
+          </Notice>
+        </>
+      );
+      break;
+    case "branding":
+      title = "Make it feel like their club";
+      content = <BrandingForm {...{ s, update, close, notify }} />;
+      break;
+    case "platformPlan":
+      title = "A plan for every stage";
+      content = (
+        <ChoiceForm
+          label="Gym SaaS plan (illustrative)"
+          value={s.saasPlan}
+          options={["Starter", "Growth", "Enterprise"]}
+          onSubmit={(plan) => {
+            update((st) => ({ ...st, saasPlan: plan }));
+            done("Demo SaaS plan updated. No billing change was made.");
+          }}
+        />
+      );
+      break;
+    case "notifications":
+      title = "A little heads-up";
+      content = (
+        <>
+          <div className="list-row">
+            <span className="square-icon sage">
+              <Icon name="dumbbell" />
+            </span>
+            <span>
+              <strong>Your next session is ready</strong>
+              <small>{s.customProgram?.name || s.program}</small>
+            </span>
+          </div>
+          <div className="list-row">
+            <span className="square-icon cream">
+              <Icon name="gift" />
+            </span>
+            <span>
+              <strong>You’ve earned something good</strong>
+              <small>
+                {s.points.toLocaleString()} points in your rewards wallet
+              </small>
+            </span>
+          </div>
+          {s.bookings
+            .filter((b) => b.status === "Booked")
+            .map((b) => (
+              <div className="list-row" key={b.id}>
+                <Icon name="calendar" />
+                <span>
+                  <strong>Your spot is saved</strong>
+                  <small>
+                    {facilities.find((f) => f.id === b.sessionId)?.name}
+                  </small>
+                </span>
+              </div>
+            ))}
+          <Notice>
+            In-app demo notifications only. No push notifications are sent.
+          </Notice>
+        </>
+      );
+      break;
+    case "waitlistInfo":
+      title = "A place in line";
+      content = (
+        <>
+          <Badge color="cream">Waitlisted</Badge>
+          <p>
+            Your member has joined the waitlist for{" "}
+            {facilities.find((f) => f.id === data.sessionId)?.name}. The sample
+            session is at capacity.
+          </p>
+          <Notice>
+            A waitlist entry does not guarantee a reservation. Automatic
+            promotion and external notifications are outside this demo.
+          </Notice>
+        </>
+      );
+      break;
+    case "reset":
+      title = "A fresh start for your next meeting";
+      content = (
+        <>
+          <p className="muted">
+            Reset this browser’s demo bookings, rewards, orders, messages,
+            programs, and gym branding to the original sample data?
+          </p>
+          <Button
+            className="full"
+            icon="reset"
+            onClick={() => {
+              reset();
+              done("Your demo is fresh and ready for the next meeting.");
+            }}
+          >
+            Reset all demo data
+          </Button>
+        </>
+      );
+      break;
+    case "help":
+      title = "Your gym, connected";
+      content = (
+        <>
+          <p>
+            Explore nine connected features through the member, trainer, and gym
+            admin roles. Use the role switcher above the page to see the same
+            activity from another perspective.
+          </p>
+          <div className="plan-details">
+            <span>
+              Design direction<strong>SpineEdge-inspired green palette</strong>
+            </span>
+            <span>
+              Storage<strong>This browser only</strong>
+            </span>
+            <span>
+              Integrations<strong>Simulated for presentations</strong>
+            </span>
+          </div>
+          <Notice>
+            Use “Walk me through” for a guided sales tour. Personalize the gym
+            in Demo settings, then reset before your next meeting.
+          </Notice>
+        </>
+      );
+      break;
+    default:
+      title = "Ready for your next step";
+      content = <p>This part of your club experience is ready to explore.</p>;
   }
-  return <Modal key={`${type}-${data?.id||''}`} title={title} description={description} onClose={close} wide={wide}>{content}</Modal>;
+  return (
+    <Modal
+      key={`${type}-${data?.id || ""}`}
+      title={title}
+      description={description}
+      onClose={close}
+      wide={wide}
+    >
+      {content}
+    </Modal>
+  );
 }
 
 function WearableFlow({ s, update, done }) {
-  const [provider,setProvider]=useState('Apple Health'),[consent,setConsent]=useState(false);
-  return s.wearable?<><div className="wearable-connected"><Icon name="watch" size={64}/><h2>Your demo watch is connected.</h2><p>Sample steps, energy, activity, and resting heart rate are available.</p></div><Toggle checked={s.shareHealth} onChange={v=>update(st=>({...st,shareHealth:v}))} label="Share sample summaries with my trainer" description="You can revoke sharing at any time."/><Button className="full space-top" variant="secondary" onClick={()=>{update(st=>({...st,wearable:false,shareHealth:false}));done('Demo watch disconnected. Trainer sharing removed.')}}>Disconnect demo wearable</Button></>:<><div className="wearable-connected"><Icon name="watch" size={64}/><h2>A little more insight.</h2><p>Choose a sample connection to preview the consent experience.</p></div><Field label="Sample provider"><select value={provider} onChange={e=>setProvider(e.target.value)}><option>Apple Health</option><option>Android Health Connect</option></select></Field><label className="consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I agree to display sample activity, steps, active energy, and heart-rate data in this demonstration. No real health account will be accessed.</span></label><Notice icon="shield">Trainer sharing is off by default and can be enabled separately.</Notice><Button className="full" disabled={!consent} onClick={()=>{update(st=>({...st,wearable:true,shareHealth:false}));done(`${provider} demo connected. Sample health data is ready.`)}}>Connect demo wearable<Icon name="arrow" size={17}/></Button></>;
+  const [provider, setProvider] = useState("Apple Health"),
+    [consent, setConsent] = useState(false);
+  return s.wearable ? (
+    <>
+      <div className="wearable-connected">
+        <Icon name="watch" size={64} />
+        <h2>Your demo watch is connected.</h2>
+        <p>
+          Sample steps, energy, activity, and resting heart rate are available.
+        </p>
+      </div>
+      <Toggle
+        checked={s.shareHealth}
+        onChange={(v) => update((st) => ({ ...st, shareHealth: v }))}
+        label="Share sample summaries with my trainer"
+        description="You can revoke sharing at any time."
+      />
+      <Button
+        className="full space-top"
+        variant="secondary"
+        onClick={() => {
+          update((st) => ({ ...st, wearable: false, shareHealth: false }));
+          done("Demo watch disconnected. Trainer sharing removed.");
+        }}
+      >
+        Disconnect demo wearable
+      </Button>
+    </>
+  ) : (
+    <>
+      <div className="wearable-connected">
+        <Icon name="watch" size={64} />
+        <h2>A little more insight.</h2>
+        <p>Choose a sample connection to preview the consent experience.</p>
+      </div>
+      <Field label="Sample provider">
+        <select value={provider} onChange={(e) => setProvider(e.target.value)}>
+          <option>Apple Health</option>
+          <option>Android Health Connect</option>
+        </select>
+      </Field>
+      <label className="consent">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+        />
+        <span>
+          I agree to display sample activity, steps, active energy, and
+          heart-rate data in this demonstration. No real health account will be
+          accessed.
+        </span>
+      </label>
+      <Notice icon="shield">
+        Trainer sharing is off by default and can be enabled separately.
+      </Notice>
+      <Button
+        className="full"
+        disabled={!consent}
+        onClick={() => {
+          update((st) => ({ ...st, wearable: true, shareHealth: false }));
+          done(`${provider} demo connected. Sample health data is ready.`);
+        }}
+      >
+        Connect demo wearable
+        <Icon name="arrow" size={17} />
+      </Button>
+    </>
+  );
 }

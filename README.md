@@ -47,10 +47,12 @@ The **Walk me through** button also provides a seven-stop guided tour.
 
 Repository: https://github.com/Andregeorges1/smart-gym-platform
 
+The repository is public, as authorized by the owner, to support free GitHub Pages hosting. The configured Pages address is https://andregeorges1.github.io/smart-gym-platform/ . A successful deployment is required before the link serves the app.
+
 The app is a Vite static build. Hash routing and relative asset paths support hosting at a GitHub Pages repository path without server rewrites.
 
 - CI runs domain tests and the production build on pushes and pull requests. It uploads `dist/` as a build artifact.
-- `.github/workflows/pages.yml` deploys after a repository variable named `PAGES_ENABLED` is set to `true`.
+- `.github/workflows/pages.yml` deploys after a repository variable named `PAGES_ENABLED` is set to `true`. This has been configured for this repository.
 - First enable **Settings → Pages → Source: GitHub Actions** in GitHub, then create the repository variable and run the Pages workflow.
 - Private-repository Pages hosting depends on GitHub account eligibility. Do not make the repository public solely to work around that without the owner's approval.
 - GitHub Pages sites can be public even when source repositories are private. Confirm the intended website audience when enabling Pages.
