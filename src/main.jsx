@@ -1,7 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
-import "./styles.css";
+import App from "./omar/engine.jsx";
+import "./omar/layout.css";
+import "./omar/orbit.css";
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
