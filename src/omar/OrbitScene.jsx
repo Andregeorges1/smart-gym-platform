@@ -50,6 +50,7 @@ export default function OrbitScene() {
       );
     }
     const draw = () => {
+      const lightMode = document.documentElement.dataset.theme === "light";
       ctx.clearRect(0, 0, width, height);
       smooth.x += (pointer.x - smooth.x) * 0.055;
       smooth.y += (pointer.y - smooth.y) * 0.055;
@@ -89,9 +90,13 @@ export default function OrbitScene() {
           j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]),
         );
         ctx.closePath();
-        ctx.fillStyle = `rgba(20,15,34,${0.36 + light * 0.2})`;
+        ctx.fillStyle = lightMode
+          ? `rgba(243,235,252,${0.5 + light * 0.25})`
+          : `rgba(20,15,34,${0.36 + light * 0.2})`;
         ctx.fill();
-        ctx.strokeStyle = `rgba(${Math.round(130 + light * 100)},${Math.round(80 + light * 125)},255,${0.2 + light * 0.6})`;
+        ctx.strokeStyle = lightMode
+          ? `rgba(110,62,166,${0.2 + light * 0.55})`
+          : `rgba(${Math.round(130 + light * 100)},${Math.round(80 + light * 125)},255,${0.2 + light * 0.6})`;
         ctx.lineWidth = light > 0.65 ? 1.2 : 0.6;
         ctx.stroke();
         if (i % 4 === 0) {
@@ -101,7 +106,9 @@ export default function OrbitScene() {
             ctx.moveTo(p[0], p[1]);
             ctx.lineTo(q[0], q[1]);
           });
-          ctx.strokeStyle = `rgba(205,190,255,${light * 0.24})`;
+          ctx.strokeStyle = lightMode
+            ? `rgba(110,62,166,${light * 0.2})`
+            : `rgba(205,190,255,${light * 0.24})`;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }
@@ -112,7 +119,13 @@ export default function OrbitScene() {
           p = mesh[i][4];
         ctx.beginPath();
         ctx.arc(p[0], p[1], n === 0 ? 3 : 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = n === 0 ? "#d5ff70" : "#e7d8ff";
+        ctx.fillStyle = lightMode
+          ? n === 0
+            ? "#648322"
+            : "#8d55bc"
+          : n === 0
+            ? "#d5ff70"
+            : "#e7d8ff";
         ctx.shadowBlur = 15;
         ctx.shadowColor = ctx.fillStyle;
         ctx.fill();
@@ -176,6 +189,7 @@ export default function OrbitScene() {
     reduced.addEventListener("change", start);
     document.addEventListener("visibilitychange", start);
     window.addEventListener("orbit-motion", start);
+    window.addEventListener("orbit-theme", start);
     return () => {
       cancelAnimationFrame(raf);
       resize.disconnect();
@@ -184,6 +198,7 @@ export default function OrbitScene() {
       reduced.removeEventListener("change", start);
       document.removeEventListener("visibilitychange", start);
       window.removeEventListener("orbit-motion", start);
+      window.removeEventListener("orbit-theme", start);
     };
   }, []);
   return <canvas className="orbit-sculpture" ref={ref} aria-hidden="true" />;

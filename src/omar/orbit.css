@@ -4220,3 +4220,109 @@ input[type="checkbox"] {
     display: inline-flex;
   }
 }
+
+/* A short rail for everyday destinations; secondary pages live in More. */
+.orbit-nav {
+  inset-block-end: auto;
+  gap: 8px;
+  padding-block: 10px;
+}
+.orbit-nav-pages {
+  gap: 5px;
+}
+.orbit-nav-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 49px;
+  width: 100%;
+  border-radius: 13px;
+  color: var(--ink-3);
+}
+.orbit-nav-more span {
+  font-size: 8px;
+  font-weight: 500;
+}
+.orbit-nav-more:hover,
+.orbit-nav-more.on {
+  background: var(--forest-tint);
+  color: var(--forest);
+}
+.orbit-theme-control {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 42px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding-top: 7px;
+  color: var(--ink-2);
+}
+.orbit-theme-control:hover {
+  color: var(--forest);
+}
+.orbit-preferences {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 16px;
+}
+.orbit-preferences button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+.orbit-preferences button:hover {
+  background: var(--forest-tint);
+  color: var(--forest);
+}
+.orbit-preferences button[aria-pressed="true"] {
+  color: var(--forest);
+}
+.rc-nav {
+  display: none;
+}
+@media (max-width: 760px) {
+  .orbit-nav {
+    inset: auto 12px calc(10px + env(safe-area-inset-bottom));
+    gap: 3px;
+    padding: 6px;
+  }
+  .orbit-nav-pages {
+    flex: 1;
+    gap: 2px;
+    width: auto;
+    overflow: visible;
+  }
+  .orbit-nav-pages button {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+  .orbit-nav-more {
+    width: 48px;
+    min-width: 44px;
+    flex-shrink: 0;
+  }
+  .orbit-theme-control {
+    width: 34px;
+    height: 38px;
+    border-top: 0;
+    border-inline-start: 1px solid var(--line);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.orbit-command-results {
+  max-height: min(46dvh, calc(82dvh - 220px));
+}

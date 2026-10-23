@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Sun, Moon, MoreHorizontal } from "lucide-react";
 import { me, M } from "./engine.jsx";
 
 const routes = {
@@ -44,15 +45,48 @@ const routes = {
     ["roadmap", "route", "Roadmap", "الخطة"],
   ],
 };
+const primaryPages = {
+  member: ["home", "book", "pass", "training"],
+  reception: ["desk", "payments", "members"],
+  trainer: ["today", "clients", "programs"],
+  admin: ["overview", "members", "schedule", "staff"],
+  platform: ["overview", "onboarding", "pricing"],
+};
+
 export function OrbitChrome() {
   const { s, route, go, t } = me(),
     ar = s.lang === "ar";
   const [open, setOpen] = useState(false),
     [query, setQuery] = useState(""),
-    [paused, setPaused] = useState(false);
+    [paused, setPaused] = useState(false),
+    [theme, setTheme] = useState(
+      () => document.documentElement.dataset.theme || "dark",
+    );
+  const themeLabel =
+    theme === "dark"
+      ? ar
+        ? "الوضع الفاتح"
+        : "Light mode"
+      : ar
+        ? "الوضع الداكن"
+        : "Dark mode";
+  const changeTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem("forma-orbit-theme", next);
+    } catch {}
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", next === "light" ? "#f7f6fa" : "#08090d");
+    window.dispatchEvent(new Event("orbit-theme"));
+  };
   const modal = useRef(null),
-    trigger = useRef(null);
+    trigger = useRef(null),
+    search = useRef(null);
   const items = Object.entries(routes)
+    .filter(([role]) => role === route.role)
     .flatMap(([role, pages]) =>
       pages.map((p) => ({
         role,
@@ -60,6 +94,12 @@ export function OrbitChrome() {
         icon: p[1],
         label: ar ? p[3] : p[2],
       })),
+    )
+    .filter(
+      (p) =>
+        query ||
+        !primaryPages[route.role].includes(p.id) ||
+        routes[route.role].length === primaryPages[route.role].length,
     )
     .filter((p) =>
       `${p.label} ${t("role." + p.role)}`
@@ -79,6 +119,7 @@ export function OrbitChrome() {
   useEffect(() => {
     if (open) {
       modal.current?.showModal();
+      if (matchMedia("(min-width: 761px)").matches) search.current?.focus();
     } else {
       modal.current?.close();
       setQuery("");
@@ -101,51 +142,51 @@ export function OrbitChrome() {
         className="orbit-nav"
         aria-label={ar ? "مساحات التطبيق" : "App spaces"}
       >
-        <button
-          className="orbit-nav-launch"
-          ref={trigger}
-          onClick={() => setOpen(true)}
-          aria-label={ar ? "كل المزايا" : "All features"}
-          title="All features · ⌘K"
-        >
-          <M name="grid" size={22} />
-        </button>
         <div className="orbit-nav-pages">
-          {routes[route.role].map(([id, icon, en, arabic], i) => (
-            <button
-              key={id}
-              onClick={() => go(route.role, id)}
-              className={route.page === id ? "on" : ""}
-              aria-current={route.page === id ? "page" : undefined}
-              title={ar ? arabic : en}
-            >
-              <M name={icon} size={20} />
-              <span>{ar ? arabic : en}</span>
-              <i className="nav-signal" />
-            </button>
-          ))}
+          {routes[route.role]
+            .filter(([id]) => primaryPages[route.role].includes(id))
+            .map(([id, icon, en, arabic]) => (
+              <button
+                key={id}
+                onClick={() => go(route.role, id)}
+                className={route.page === id ? "on" : ""}
+                aria-current={route.page === id ? "page" : undefined}
+                title={ar ? arabic : en}
+              >
+                <M name={icon} size={20} />
+                <span>{ar ? arabic : en}</span>
+                <i className="nav-signal" />
+              </button>
+            ))}
         </div>
         <button
-          className="orbit-motion-control"
-          onClick={pause}
-          aria-pressed={paused}
-          aria-label={
-            paused
-              ? ar
-                ? "تشغيل الحركة"
-                : "Resume animation"
-              : ar
-                ? "إيقاف الحركة"
-                : "Pause animation"
-          }
-          title={paused ? "Resume animation" : "Pause animation"}
+          className={`orbit-nav-more ${!primaryPages[route.role].includes(route.page) ? "on" : ""}`}
+          ref={trigger}
+          onClick={() => setOpen(true)}
+          aria-label={ar ? "المزيد" : "More"}
+          aria-haspopup="dialog"
+          title={ar ? "المزيد · ⌘K" : "More · ⌘K"}
         >
-          <M name={paused ? "play" : "sparkles"} size={18} />
+          <MoreHorizontal size={20} aria-hidden="true" />
+          <span>{ar ? "المزيد" : "More"}</span>
+        </button>
+        <button
+          className="orbit-theme-control"
+          onClick={changeTheme}
+          aria-label={themeLabel}
+          title={themeLabel}
+        >
+          {theme === "dark" ? (
+            <Sun size={19} aria-hidden="true" />
+          ) : (
+            <Moon size={19} aria-hidden="true" />
+          )}
         </button>
       </nav>
       <dialog
         ref={modal}
         className="orbit-launcher"
+        aria-label={ar ? "المزيد" : "More features"}
         onCancel={() => setOpen(false)}
         onClose={() => {
           setOpen(false);
@@ -157,7 +198,7 @@ export function OrbitChrome() {
       >
         <header>
           <span className="micro">
-            FORMA / {ar ? "كل المزايا" : "COMMAND CENTER"}
+            {t("role." + route.role)} / {ar ? "المزيد" : "MORE"}
           </span>
           <button
             className="icon-btn"
@@ -170,9 +211,9 @@ export function OrbitChrome() {
         <label className="orbit-command-search">
           <M name="search" />
           <input
-            autoFocus
+            ref={search}
             placeholder={ar ? "أين تريدين الذهاب؟" : "Where to next?"}
-            aria-label={ar ? "البحث عن ميزة" : "Search all features"}
+            aria-label={ar ? "البحث عن ميزة" : "Search features"}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -188,10 +229,7 @@ export function OrbitChrome() {
               }}
             >
               <M name={item.icon} />
-              <span>
-                {item.label}
-                <small>{t("role." + item.role)}</small>
-              </span>
+              <span>{item.label}</span>
               <M name="out" size={16} />
             </button>
           ))}
@@ -199,6 +237,26 @@ export function OrbitChrome() {
             <p>{ar ? "لا توجد نتائج" : "No matching features."}</p>
           )}
         </div>
+        <footer className="orbit-preferences">
+          <button onClick={changeTheme}>
+            {theme === "dark" ? (
+              <Sun size={17} aria-hidden="true" />
+            ) : (
+              <Moon size={17} aria-hidden="true" />
+            )}
+            {themeLabel}
+          </button>
+          <button onClick={pause} aria-pressed={paused}>
+            <M name={paused ? "play" : "sparkles"} size={17} />
+            {paused
+              ? ar
+                ? "تشغيل الحركة"
+                : "Resume motion"
+              : ar
+                ? "إيقاف الحركة"
+                : "Pause motion"}
+          </button>
+        </footer>
       </dialog>
     </>
   );

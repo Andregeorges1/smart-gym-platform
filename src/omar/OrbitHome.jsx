@@ -15,7 +15,6 @@ import {
   If,
   Ml,
   Pl,
-  Xo,
   en,
   de,
   dt,
@@ -38,9 +37,7 @@ export default function OrbitHome() {
     visit = qt(s, be),
     award = Lf(s),
     quiet = If(s);
-  const program = s.programs.find((p) => p.memberId === be),
-    points = Pl(s),
-    visits = Xo(s),
+  const points = Pl(s),
     pkg = en(s, be);
   const pt = s.ptSessions.find(
     (p) => p.memberId === be && p.status === "scheduled" && p.day === 0,
@@ -333,83 +330,6 @@ export default function OrbitHome() {
               );
             })}
             {!tonight.length && <p>{t("m.home.noneTonight")}</p>}
-          </div>
-        </section>
-        <section className="orbit-universe">
-          <div className="orbit-card-head">
-            <div>
-              <span className="micro">
-                {tx("YOUR FITNESS UNIVERSE", "عالم لياقتك")}
-              </span>
-              <h2>{tx("Everything. Connected.", "كل حاجة. متصلة.")}</h2>
-            </div>
-            <span className="micro">02 — 05</span>
-          </div>
-          <div className="orbit-feature-grid">
-            <button
-              onClick={() => go("member", "training")}
-              className="orbit-feature"
-            >
-              <span className="feature-symbol">
-                <M name="dumbbell" size={34} />
-              </span>
-              <div>
-                <Ge phase="2" />
-                <h3>{tx("Train", "تمرّني")}</h3>
-                <p>{program ? L(program.name) : t("m.nav.training")}</p>
-              </div>
-              <M name="out" />
-            </button>
-            <button
-              onClick={() => go("member", "explore")}
-              className="orbit-feature"
-            >
-              <span className="feature-symbol">
-                <M name="map" size={34} />
-              </span>
-              <div>
-                <Ge phase="2" />
-                <h3>{tx("Explore", "اكتشفي")}</h3>
-                <p>
-                  {t("m.home.floorMeta", {
-                    n: s.equipment.filter((e) => e.status === "active").length,
-                  })}
-                </p>
-              </div>
-              <M name="out" />
-            </button>
-            <button
-              onClick={() => go("member", "community")}
-              className="orbit-feature"
-            >
-              <span className="feature-symbol">
-                <M name="trophy" size={34} />
-              </span>
-              <div>
-                <Ge phase="3" />
-                <h3>{tx("Together", "سوا")}</h3>
-                <p>
-                  {f.num(Math.min(visits, s.challenge.target))} /{" "}
-                  {f.num(s.challenge.target)}{" "}
-                  {tx("weekly visits", "زيارات أسبوعية")}
-                </p>
-              </div>
-              <M name="out" />
-            </button>
-            <button
-              onClick={() => go("member", "health")}
-              className="orbit-feature"
-            >
-              <span className="feature-symbol">
-                <M name="activity" size={34} />
-              </span>
-              <div>
-                <Ge phase="3" />
-                <h3>{tx("In sync", "بانسجام")}</h3>
-                <p>{tx("Health, on your terms", "صحتك، بشروطك")}</p>
-              </div>
-              <M name="out" />
-            </button>
           </div>
         </section>
       </div>

@@ -8,6 +8,20 @@
       name="description"
       content="A connected gym experience. Explore training, bookings, coaching, rewards and gym operations in the Smart Gym interactive demo."
     />
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("forma-orbit-theme") === "light"
+            ? "light"
+            : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+      document.querySelector('meta[name="theme-color"]').content =
+        document.documentElement.dataset.theme === "light"
+          ? "#f7f6fa"
+          : "#08090d";
+    </script>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <title>FORMA / ORBIT — Beyond limits.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

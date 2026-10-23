@@ -5,6 +5,7 @@ import React, * as V from "react";
 import * as e from "react/jsx-runtime";
 import * as rg from "react-dom";
 import OrbitHome from "./OrbitHome.jsx";
+import { Al, me } from "./context.js";
 import { OrbitChrome, useOrbitMotion } from "./OrbitChrome.jsx";
 const Tn = React;
 import {
@@ -2905,8 +2906,6 @@ const og =
     ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
     ["path", { d: "m6 6 12 12", key: "d8bk6v" }],
   ]),
-  Al = V.createContext(null),
-  me = () => V.useContext(Al),
   Ru = V.createContext(null);
 function Fu() {
   const { s } = me();
